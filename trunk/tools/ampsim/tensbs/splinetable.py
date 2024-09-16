@@ -3,6 +3,7 @@ import itertools, fractions
 import numpy as np
 import pylab
 from scipy.interpolate import LSQUnivariateSpline, InterpolatedUnivariateSpline, UnivariateSpline
+from functools import reduce
 
 try:
     np.pad
@@ -28,11 +29,11 @@ except AttributeError:
                     fmt = "Unable to create correctly shaped tuple from %s"
                     raise ValueError(fmt % (normshp,))
         elif (isinstance(shape, (tuple, list))
-                and isinstance(shape[0], (int, float, long))
+                and isinstance(shape[0], (int, float))
                 and len(shape) == 1):
             normshp = ((shape[0], shape[0]), ) * shapelen
         elif (isinstance(shape, (tuple, list))
-                and isinstance(shape[0], (int, float, long))
+                and isinstance(shape[0], (int, float))
                 and len(shape) == 2):
             normshp = (shape, ) * shapelen
         if normshp == None:
@@ -93,13 +94,13 @@ except AttributeError:
                     kwargs[i] = _normalize_shape(narray, kwargs[i])
         elif mode == None:
             raise ValueError('Keyword "mode" must be a function or one of %s.' %
-                              (modefunc.keys(),))
+                              (list(modefunc.keys()),))
         else:
             # User supplied function, I hope
             function = mode
 
         # Create a new padded array
-        rank = range(len(narray.shape))
+        rank = list(range(len(narray.shape)))
         total_dim_increase = [np.sum(pad_width[i]) for i in rank]
         offset_slices = [slice(pad_width[i][0],
                                pad_width[i][0] + narray.shape[i])
@@ -168,10 +169,10 @@ class TensorSpline(object):
     def calc_coeffs(self):
         coeff = []
         for v, (g, kdata) in enumerate(zip(self.basegrid, self.knot_data)):
-            ranges = [(slice(r[0], r[1], t[0]*1j) if kd.used() else slice((r[1]-r[0])/2.0,r[1],1j)) for r, t, kd in zip(self.ranges,g[0],kdata)]
+            ranges = [(slice(r[0], r[1], t[0]*1j) if kd.used() else slice((r[1]-r[0])/2.0, r[1], 1j)) for r, t, kd in zip(self.ranges, g[0], kdata)]
             fnc = self.calc_grid(ranges, g[1], g[2])[v]
             for n in range(len(ranges)):
-                kd = self.knot_data[v,n]
+                kd = self.knot_data[v, n]
                 if not kd.used():
                     continue
                 s = list(fnc.shape)
@@ -194,12 +195,12 @@ class TensorSpline(object):
         x_e += (x_e - x[-2]) * 0.1
         start = k // 2
         end = -(k - start)
-        knots = np.zeros((3,len(x)-k))
+        knots = np.zeros((3, len(x)-k))
         knots[0] = x[start:end]
         knots[1] = np.arange(start, len(x)+end)
         if k % 2:
-            knots[0,:-1] += knots[0,1:]
-            knots[0,-1] += x[end]
+            knots[0, :-1] += knots[0, 1:]
+            knots[0, -1] += x[end]
             knots[0] *= 0.5
         return knots, (x[0], x_e)
 
@@ -248,7 +249,7 @@ class TensorSpline(object):
         ki = np.unique(np.digitize(pos, kn), True)[1]
         idx = [slice(None)]*val.ndim
         l = []
-        for i, j in itertools.izip_longest(ki, ki[1:]):
+        for i, j in itertools.zip_longest(ki, ki[1:]):
             idx[n] = slice(i, j)
             l.append(np.amax(val[idx]))
         a = np.array(l)
@@ -262,7 +263,7 @@ class TensorSpline(object):
         f = reduce(fractions.gcd, idx)
         idx /= f
         a = np.empty(idx[-1], dtype=np.int32)
-        for m, (i, j) in enumerate(itertools.izip_longest(idx[:-1], idx[1:])):
+        for m, (i, j) in enumerate(itertools.zip_longest(idx[:-1], idx[1:])):
             a[i:j] = m
         a += k-1
         return KnotData(np.pad(kn[0], k, 'constant', constant_values=bbox), a, slice(r.start, r.stop, r.step/f), k)
@@ -301,21 +302,21 @@ class TensorSpline(object):
                 rlim = 0
             else:
                 rlim = (np.amin(apply_subcube(np.amin, dfnc, i)[:iend]), np.amax(apply_subcube(np.amax, dfnc, i)[:iend]))
-                print apply_subcube(np.amax, abs(dfnc), i)[iend:]; print iend, dlim; raise SystemExit
-        print "##", dlim, (istart, iend), (llim, rlim)
+                print(apply_subcube(np.amax, abs(dfnc), i)[iend:]); print(iend, dlim); raise SystemExit
+        print("##", dlim, (istart, iend), (llim, rlim))
         return (istart, iend), (llim, rlim)
 
     def find_knots(self):
         for v, g in enumerate(self.basegrid):
             order = [t[1] for t in g[0] if t is not None]
             for n in range(len(self.ranges)):
-                ranges = [slice(r[0], r[1], (2j * t[0] + 1 if i == n else 0.5j * t[0])) for i, (r, t) in enumerate(zip(self.ranges,g[0]))]
+                ranges = [slice(r[0], r[1], (2j * t[0] + 1 if i == n else 0.5j * t[0])) for i, (r, t) in enumerate(zip(self.ranges, g[0]))]
                 fnc = self.calc_grid(ranges, g[1], g[2])[v]
                 #self.get_support(n, fnc, np.amax(abs(fnc))*(ranges[n].stop-ranges[n].start)/ranges[n].step.imag * 1e-4)
                 ptp = fnc.ptp()
                 if np.amax(fnc.ptp(axis=n)) < 1e-6 * ptp:
-                    print "%s[%d,%d]: const: %g" % (self.func.comp_id, v, n, np.amax(fnc.ptp(axis=n)) / ptp)
-                    self.knot_data[v, n] = KnotData(None,None,None,None)
+                    print("%s[%d,%d]: const: %g" % (self.func.comp_id, v, n, np.amax(fnc.ptp(axis=n)) / ptp))
+                    self.knot_data[v, n] = KnotData(None, None, None, None)
                     continue
                 k = order[n]
                 x = np.mgrid[ranges[n]]
@@ -344,21 +345,21 @@ class TensorSpline(object):
                         if am is None:
                             raise ValueError("bad approximation for %s[%d,%d]: %g > %g" % (self.func.comp_id, v, n, mx, e_max))
                         kn = good
-                        kn[2,am] = 1
+                        kn[2, am] = 1
                     else:
                         good = kn
                     if False:
                         xd = np.square(np.diff(ss(kn[:-1], k))).argsort()+1
                     else:
-                        xd = self.max_diff(n, np.pad(kn[0],(1,0),'constant',constant_values=(x[0],)), x, df).argsort()
+                        xd = self.max_diff(n, np.pad(kn[0], (1, 0), 'constant', constant_values=(x[0],)), x, df).argsort()
                     for am in xd:
-                        if not kn[2,am]:
+                        if not kn[2, am]:
                             break
                     else:
                         break
-                    kn = np.append(kn[:,:am],kn[:,am+1:], axis=1)
+                    kn = np.append(kn[:, :am], kn[:, am+1:], axis=1)
                 self.knot_data[v, n] = self.mk_result(kn, bbox, k, rng)
-                print "%s[%d,%d]: (%g), %d -> %d" % (self.func.comp_id, v, n, e_max, len(kn0[0]), len(kn[0]))
+                print("%s[%d,%d]: (%g), %d -> %d" % (self.func.comp_id, v, n, e_max, len(kn0[0]), len(kn[0])))
                 #print "#", fnc.shape, x.shape, e_max
                 #print kn[:1]
                 #pylab.plot(x, fnc[:,0,:])
@@ -390,15 +391,15 @@ def b_ink(x, fnca, k):
                 idx = list(idx)
                 idx[n] = slice(None)
                 #ss = InterpolatedUnivariateSpline(x[n], fnc[idx], bbox=(xx[0],xxe), k=k[n]-1)
-                ss = LSQUnivariateSpline(xx, fnc[idx], knots, bbox=(xx[0],xxe), k=kk-1)
+                ss = LSQUnivariateSpline(xx, fnc[idx], knots, bbox=(xx[0], xxe), k=kk-1)
                 cf[idx] = ss.get_coeffs()
-            t[n] = np.pad(knots, kk, 'constant', constant_values=(xx[0],xxe))
+            t[n] = np.pad(knots, kk, 'constant', constant_values=(xx[0], xxe))
             fnc = cf
         ca.append(fnc)
     return t, ca
 
 def print_float_array(o, name, a, prefix):
-    print >>o, "%sfloat %s[%d] = {" % (prefix, name, a.size)
+    print("%sfloat %s[%d] = {" % (prefix, name, a.size), file=o)
     s = "  "
     i = 0
     a = np.where(abs(a) < 100*np.finfo(np.float32).tiny, 0, a)
@@ -408,13 +409,13 @@ def print_float_array(o, name, a, prefix):
         s = ","
         i += 1
         if i % 10 == 0:
-            print >>o, ","
+            print(",", file=o)
             s = "  "
-    print >>o, "};"
+    print("};", file=o)
     return a.size * np.float32().nbytes
 
 def print_int_array(o, name, a, prefix):
-    print >>o, "%sint %s[%d] = {" % (prefix, name, a.size)
+    print("%sint %s[%d] = {" % (prefix, name, a.size), file=o)
     s = "  "
     i = 0
     for v in a.ravel('C'):
@@ -422,13 +423,13 @@ def print_int_array(o, name, a, prefix):
         s = ","
         i += 1
         if i % 10 == 0:
-            print >>o, ","
+            print(",", file=o)
             s = "  "
-    print >>o, "};"
+    print("};", file=o)
     return a.size * np.int32().nbytes
 
 def print_char_array(o, name, a, prefix):
-    print >>o, "%sunsigned char %s[%d] = {" % (prefix, name, a.size)
+    print("%sunsigned char %s[%d] = {" % (prefix, name, a.size), file=o)
     s = "  "
     i = 0
     for v in a.ravel('C'):
@@ -438,9 +439,9 @@ def print_char_array(o, name, a, prefix):
         s = ","
         i += 1
         if i % 10 == 0:
-            print >>o, ","
+            print(",", file=o)
             s = "  "
-    print >>o, "};"
+    print("};", file=o)
     align = 4
     return ((a.size + align - 1) // align) * align
 
@@ -459,11 +460,11 @@ def print_intpp_data(o, tag, prefix, func, rgdata, basegrid):
     coeffs = spl.calc_coeffs()
     for iv, val in enumerate(spl.knot_data):
         n = len([v for v in val if v.used()])
-        print >>o, "%sreal x0%s_%d[%d] = {%s};" % (prefix, tag, iv, n, ", ".join([str(float(r[0])) for r, v in zip(rgdata, val) if v.used()]))
-        print >>o, "%sreal xe%s_%d[%d] = {%s};" % (prefix, tag, iv, n, ", ".join([str(float(r[1])) for r, v in zip(rgdata, val) if v.used()]))
-        print >>o, "%sreal hi%s_%d[%d] = {%s};" % (prefix, tag, iv, n, ", ".join([str(v.inv_h()) for v in val if v.used()]))
-        print >>o, "%sint nmap%s_%d[%d] = {%s};" % (prefix, tag, iv, n, ", ".join([str(v.count()) for v in val if v.used()]))
-        print >>o, "%sint n%s_%d[%d] = {%s};" % (prefix, tag, iv, n, ", ".join([str(v.num_coeffs()) for v in val if v.used()]))
+        print("%sreal x0%s_%d[%d] = {%s};" % (prefix, tag, iv, n, ", ".join([str(float(r[0])) for r, v in zip(rgdata, val) if v.used()])), file=o)
+        print("%sreal xe%s_%d[%d] = {%s};" % (prefix, tag, iv, n, ", ".join([str(float(r[1])) for r, v in zip(rgdata, val) if v.used()])), file=o)
+        print("%sreal hi%s_%d[%d] = {%s};" % (prefix, tag, iv, n, ", ".join([str(v.inv_h()) for v in val if v.used()])), file=o)
+        print("%sint nmap%s_%d[%d] = {%s};" % (prefix, tag, iv, n, ", ".join([str(v.count()) for v in val if v.used()])), file=o)
+        print("%sint n%s_%d[%d] = {%s};" % (prefix, tag, iv, n, ", ".join([str(v.num_coeffs()) for v in val if v.used()])), file=o)
         sz += (2*int_sz+2*float_sz) * n;
         #grd = np.mgrid[ranges]
         #grd_shape = grd.shape
@@ -496,9 +497,9 @@ def print_intpp_data(o, tag, prefix, func, rgdata, basegrid):
             t = "c%d_%d%s" % (i, iv, tag)
             ci.append(t)
             sz += print_float_array(o, t, coeffs[iv], prefix)
-        print >>o, "%sunsigned char *map%s_%d[%d] = {%s};" % (prefix, tag, iv, n, ", ".join(ai))
-        print >>o, "%sfloat *t%s_%d[%d] = {%s};" % (prefix, tag, iv, n, ", ".join(ti))
-        print >>o, "%sfloat *c%s_%d[%d] = {%s};" % (prefix, tag, iv, 1, ", ".join(ci))
+        print("%sunsigned char *map%s_%d[%d] = {%s};" % (prefix, tag, iv, n, ", ".join(ai)), file=o)
+        print("%sfloat *t%s_%d[%d] = {%s};" % (prefix, tag, iv, n, ", ".join(ti)), file=o)
+        print("%sfloat *c%s_%d[%d] = {%s};" % (prefix, tag, iv, 1, ", ".join(ci)), file=o)
     sz += (n + len(basegrid)) * float_sz
     return sz, [[v.order for v in val] for val in spl.knot_data]
 
@@ -511,7 +512,7 @@ class PlotManager(object):
         self.i = 1
 
     def __call__(self):
-        pylab.subplot(self.r,self.c,self.i)
+        pylab.subplot(self.r, self.c, self.i)
         self.i += 1
 
 def check_error_grid2(name, ranges, func1, func2, labels, pm):
@@ -521,24 +522,24 @@ def check_error_grid2(name, ranges, func1, func2, labels, pm):
         return tuple(func1(x))
     def f2(x):
         return tuple(func2(x))
-    print name
-    for i, (l, a1, a2) in enumerate(zip(labels, np.vectorize(f1)(points),np.vectorize(f2)(points))):
+    print(name)
+    for i, (l, a1, a2) in enumerate(zip(labels, np.vectorize(f1)(points), np.vectorize(f2)(points))):
         a = abs(a2 - a1)
-        print "%s: %g" % (l, max(a.flat))
+        print("%s: %g" % (l, max(a.flat)))
         if False:
             m = argsort(a, axis=None)
             for i in range(10):
                 n = m[-(1+i)]
                 idx = unravel_index(n, a.shape)
-                print idx, ",".join(["%g" % v for v in points[idx]]), a.flat[n]
+                print(idx, ",".join(["%g" % v for v in points[idx]]), a.flat[n])
         if pm:
             pm()
-            pylab.title("%s/%s" % (name,l))
+            pylab.title("%s/%s" % (name, l))
             pylab.hist(a.flat)
 
 def check_error_func2(name, func, funcrange, func0, val, pm):
     l = []
     for i, (x0, h, n) in enumerate(funcrange):
         stop = x0 + (n-1)*h - 1e-6
-        l.append(slice(x0+h/2,stop-h/2,(n-1)*1j))
+        l.append(slice(x0+h/2, stop-h/2, (n-1)*1j))
     check_error_grid2(name, l, func, func0, val, pm)

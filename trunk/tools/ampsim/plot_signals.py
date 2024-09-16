@@ -3,7 +3,7 @@ from pylab import *
 
 def mkplot(inp, *args, **kw):
     if isinstance(inp, (cp.pycircuit.CalcBase, Func)):
-        inp = inp.captured[:,0]
+        inp = inp.captured[:, 0]
     x = linspace(0, timespan, len(inp))
     plot(x, inp, "r", label="Uin")
     legend(loc=2)
@@ -16,7 +16,7 @@ def mkplot(inp, *args, **kw):
         if isinstance(a, (cp.pycircuit.CalcBase, Func)):
             if lb is None:
                 lb = a.capture_signals
-            elif isinstance(lb, basestring):
+            elif isinstance(lb, str):
                     lb = [lb]
             for v, n in zip(a.captured.T, lb):
                 plot(x, v, label=n)
@@ -65,7 +65,7 @@ class Func(object):
         self.show_stat(l, "OUT", self.min_out, self.max_out)
         l += ["%s: %g..%g" % v for v in  zip(self.p.state_names, self.p.min_state, self.p.max_state)]
         s = ", ".join(l)
-        print "%s: %.0fnsec, %s" % (self.p.comp_id, self.p.nanosec_per_sample, s)
+        print(("%s: %.0fnsec, %s" % (self.p.comp_id, self.p.nanosec_per_sample, s)))
 
 
 def sine(freq):
@@ -83,14 +83,14 @@ freq = 150.0
 timespan = 9/freq
 s = 0.1*sine(freq)
 y = sp(0.4*pr3(0.4*pr2(0.5*pr1(s))))
-s1 = g1(y[:,0])
-s2 = g2(y[:,1])
+s1 = g1(y[:, 0])
+s2 = g2(y[:, 1])
 #s2 += s1
-res = pl(vstack((s1,s2)).T)
+res = pl(vstack((s1, s2)).T)
 for v in pr1, pr2, pr3, sp, g1, g2, pl:
     v.print_statist()
 subplot(221)
-mkplot(s, (pr2,"Ua Stage2"), (pr3,"Ua Stage3"), head="Preamp")
+mkplot(s, (pr2, "Ua Stage2"), (pr3, "Ua Stage3"), head="Preamp")
 subplot(222)
 mkplot(pr3, sp, head="Phase Splitter")
 subplot(223)

@@ -3,36 +3,36 @@ import circuit
 from tensbs import splinetable
 import multiprocessing as mp
 import numpy as np
-from cStringIO import StringIO
+from io import StringIO
 
 def print_intpp_data(i):
     p = components_list[i]()
     o = StringIO()
     if hasattr(p, "init"):
         p.init()
-    print >>o, "namespace %s {" % p.comp_id
+    print("namespace %s {" % p.comp_id, file=o)
     r, order_tab = splinetable.print_intpp_data(o, "", "", p, p.ranges, p.basegrid)
-    print >>o, "splinecoeffs sc[%d] = {" % p.NVALS
+    print("splinecoeffs sc[%d] = {" % p.NVALS, file=o)
     f_set = set()
     for j, row in enumerate(order_tab):
         inst = "splinedata::splev<%s>" % ",".join([str(v) for v in row if v is not None])
         f_set.add(inst)
-        print >>o, "\t{x0_%d, xe_%d, hi_%d, n_%d, nmap_%d, map_%d, t_%d, c_%d, %s}," % (j, j, j, j, j, j, j, j, inst)
-    print >>o, "};"
-    print >>o, "splinedata sd = {"
-    print >>o, "\tsc,"
-    print >>o, "\t%d, /* number of calculated values */" % p.NVALS
-    print >>o, "\t%d, /* number of input values */" % p.N_IN
-    print >>o, "\t%d, /* number of output values */" % (p.NVALS-(p.NDIM-p.N_IN))
-    print >>o, "\t%d, /* number of state values */" % (p.NDIM-p.N_IN)
-    print >>o, '\t"%s",' % p.comp_id
-    print >>o, "};"
-    print >>o, "}; /* ! namespace %s */" % p.comp_id
+        print("\t{x0_%d, xe_%d, hi_%d, n_%d, nmap_%d, map_%d, t_%d, c_%d, %s}," % (j, j, j, j, j, j, j, j, inst), file=o)
+    print("};", file=o)
+    print("splinedata sd = {", file=o)
+    print("\tsc,", file=o)
+    print("\t%d, /* number of calculated values */" % p.NVALS, file=o)
+    print("\t%d, /* number of input values */" % p.N_IN, file=o)
+    print("\t%d, /* number of output values */" % (p.NVALS-(p.NDIM-p.N_IN)), file=o)
+    print("\t%d, /* number of state values */" % (p.NDIM-p.N_IN), file=o)
+    print('\t"%s",' % p.comp_id, file=o)
+    print("};", file=o)
+    print("}; /* ! namespace %s */" % p.comp_id, file=o)
     o.seek(0)
     return r, o.read(), f_set, p.comp_name, p.comp_id;
 
 def print_header_file_start(h):
-    print >>h, """\
+    print("""\
 #ifndef _DATA_H
 #define _DATA_H 1
 
@@ -44,31 +44,31 @@ namespace AmpData {
     extern real a1;
     extern int fs;
 
-"""
+""", file=h)
 
 def print_header_file_end(h):
-    print >>h, """\
+    print("""\
 }
 
 #endif /* !_DATA_H */
-"""
+""", file=h)
 
 def print_header_file_entry(h, f):
-    print >>h, "namespace %s { extern splinedata sd; }" % f
+    print("namespace %s { extern splinedata sd; }" % f, file=h)
 
 def print_header(o):
-    print >>o, '#include "intpp.h"'
-    print >>o, "namespace AmpData {"
+    print('#include "intpp.h"', file=o)
+    print("namespace AmpData {", file=o)
     if 0:
         b0, b1, a1 = circuit.PhaseSplitter().feedback_coeff(1.0)
-        print >>o, "real b0 = %g;" % b0
-        print >>o, "real b1 = %g;" % b1
-        print >>o, "real a1 = 1 - %g;" % (1 - a1)
-    print >>o, "int fs = %d;" % circuit.FS
+        print("real b0 = %g;" % b0, file=o)
+        print("real b1 = %g;" % b1, file=o)
+        print("real a1 = 1 - %g;" % (1 - a1), file=o)
+    print("int fs = %d;" % circuit.FS, file=o)
     return 3 * np.float32().nbytes + np.int32().nbytes
 
 def print_footer(o):
-    print >>o, "} // namespace AmpData"
+    print("} // namespace AmpData", file=o)
     return 0
 
 components_list = [
@@ -99,10 +99,10 @@ def write_files(o, inst, h):
         print_header_file_entry(h, comp_id)
     sz += print_footer(o)
     l.append("data size sum: %d bytes" % sz)
-    print >>o, "".join(["\n// " + s for s in l])
+    print("".join(["\n// " + s for s in l]), file=o)
     print_header_file_end(h)
     for v in sorted(templ):
-        print >>inst, "template int %s(splinecoeffs *p, real xi[2], real *res);" % v
+        print("template int %s(splinecoeffs *p, real xi[2], real *res);" % v, file=inst)
 
 def main():
     if len(sys.argv) > 1:

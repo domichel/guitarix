@@ -1,5 +1,5 @@
 import numpy as np
-from components import *
+from .components import *
 
 class Func(object):
 
