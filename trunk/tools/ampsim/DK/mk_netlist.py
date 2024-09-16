@@ -1,4 +1,4 @@
-from __future__ import division
+
 import sys, os, re
 
 def mksym(sym, nm, dev=None):
@@ -13,26 +13,26 @@ def mksym(sym, nm, dev=None):
     return "%s(%s)" % (dev, sym)
 
 R_dict = {
-    "k" : "e3",
-    "M" : "e6",
-    "." : "",
-    ""  : "",
+    "k": "e3",
+    "M": "e6",
+    ".": "",
+    "": "",
     }
 
 C_dict = {
-    "n" : "e-9",
-    "p" : "e-12",
-    "u" : "e-6",
-    "." : "e-6",
-    ""  : "e-6",
+    "n": "e-9",
+    "p": "e-12",
+    "u": "e-6",
+    ".": "e-6",
+    "": "e-6",
     }
 
 L_dict = {
-    "m" : "e-3",
-    "u" : "e-6",
-    "H" : "",
-    "." : "",
-    ""  : "",
+    "m": "e-3",
+    "u": "e-6",
+    "H": "",
+    ".": "",
+    "": "",
     }
 
 def resistor_value(val):
@@ -87,7 +87,7 @@ def mk_dict(val, **kw):
     l = []
     for k, v in [v.split("=") for v in val.split(",")]:
         if k not in kw:
-            print "warning: unknown parameter %s" % k
+            print(("warning: unknown parameter %s" % k))
             try:
                 v = float(v)
             except ValueError:
@@ -106,7 +106,7 @@ def read_netlist(fname):
         inp = []
         for line in f:
             line = line.split()
-            print line
+            print(line)
             sym = line[0]
             dev = line[1]
             val = line[2]
@@ -134,7 +134,7 @@ def read_netlist(fname):
                 conn = conn[:2] + conn[4:]
                 sym = mksym(sym, "U", "OPA")
                 if "=" in val:
-                    val = mk_dict(val,Vcc=Voltage,Vee=Voltage,A=Current)
+                    val = mk_dict(val, Vcc=Voltage, Vee=Voltage, A=Current)
                 else:
                     val = "Opamps['%s']" % val
             elif dev == "RESISTOR":
@@ -161,7 +161,7 @@ def read_netlist(fname):
                     elif k.startswith("w"):
                         d[int(k[1:])] = float(v)
                     else:
-                        print "warning: unknown parameter %s" % k
+                        print(("warning: unknown parameter %s" % k))
                 vl["windings"] = [v[1] for v in sorted(d.items())]
                 val = repr(vl)
             elif dev == "TRANSFORMER_S":
@@ -178,7 +178,7 @@ def read_netlist(fname):
                     elif k.startswith("w"):
                         d[int(k[1:])] = float(v)
                     else:
-                        print "warning: unknown parameter %s" % k
+                        print(("warning: unknown parameter %s" % k))
                 vl["windings"] = [v[1] for v in sorted(d.items())]
                 val = repr(vl)
             elif dev == "TRANSFORMERGC":
@@ -200,38 +200,38 @@ def read_netlist(fname):
                     elif k.startswith("w"):
                         d[int(k[1:])] = float(v)
                     else:
-                        print "warning: unknown parameter %s" % k
+                        print(("warning: unknown parameter %s" % k))
                 vl["windings"] = [v[1] for v in sorted(d.items())]
                 val = repr(vl)
             elif dev == "NPN_TRANSISTOR":
                 sym = mksym(sym, "T")
                 if "=" in val:
-                    val = mk_dict(val,Vt=Voltage,Is=Current,Bf=Number,Br=Number)
+                    val = mk_dict(val, Vt=Voltage, Is=Current, Bf=Number, Br=Number)
                 else:
                     val = "Transistors['%s']" % val
             elif dev == "PNP_TRANSISTOR":
                 ##FIXME
                 sym = mksym(sym, "Tp")
                 if "=" in val:
-                    val = mk_dict(val,Vt=Voltage,Is=Current,Bf=Number,Br=Number)
+                    val = mk_dict(val, Vt=Voltage, Is=Current, Bf=Number, Br=Number)
                 else:
                     val = "Transistors['%s']" % val
             elif dev == "DIODE":
                 sym = mksym(sym, "D")
                 if "=" in val:
                     if "N" in val: # new model: mUt = thermal voltage N = Emission coefficient
-                        val = mk_dict(val,Is=Current,mUt=Number,N=Number)
+                        val = mk_dict(val, Is=Current, mUt=Number, N=Number)
                     else: # old model, mUt = (N * Vt)
-                        val = mk_dict(val,Is=Current,mUt=Number,N=1.0)
+                        val = mk_dict(val, Is=Current, mUt=Number, N=1.0)
                 else:
                     val = "Diodes['%s']" % val
             elif dev == "DIODE2":
                 sym = mksym(sym, "D2")
                 if "=" in val:
                     if "N" in val: # new model: mUt = thermal voltage N = Emission coefficient
-                        val = mk_dict(val,Is=Current,mUt=Number,N=Number)
+                        val = mk_dict(val, Is=Current, mUt=Number, N=Number)
                     else: # old model, mUt = (N * Vt)
-                        val = mk_dict(val,Is=Current,mUt=Number,N=1.0)
+                        val = mk_dict(val, Is=Current, mUt=Number, N=1.0)
                 else:
                     val = "Diodes['%s']" % val
             elif dev == "TRIODE":
@@ -244,7 +244,7 @@ def read_netlist(fname):
             elif dev == "VARIABLE_RESISTOR":
                 sym = mksym(sym, "P")
                 if "=" in val:
-                    val = mk_dict(val,value=Resistance,a=Number,inv=Number,var=Text,name=Text)
+                    val = mk_dict(val, value=Resistance, a=Number, inv=Number, var=Text, name=Text)
                 else:
                     val = resistor_value(val)
             elif dev == "CONNECTION_CURRENT":
@@ -279,9 +279,9 @@ def read_netlist(fname):
             "\n" +
             "V = {%s}" % "".join(['%s: %s,\n     ' % v for v in sorted(values.items())])
             )
-    print '\n%s \n' % nt
+    print(('\n%s \n' % nt))
     return nt
     return rows, values
 
 if __name__ == "__main__":
-    print read_netlist(sys.argv[1])
+    print((read_netlist(sys.argv[1])))

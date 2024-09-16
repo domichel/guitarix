@@ -1,8 +1,8 @@
-from __future__ import division
+
 import matplotlib
 # matplotlib.use('Qt4Agg') # set when you prefer to use the Qt backend over the Tk one
 import sympy, math, shutil, sys, os, numpy, pylab, warnings, tempfile, logging, argparse
-from cStringIO import StringIO
+from io import StringIO
 import dk_simulator, models, circ, mk_netlist, dk_lib, simu, signals, generate_code
 from signals import Signal
 from dk_lib import CircuitException, error
@@ -14,7 +14,7 @@ except NameError:
     pass
 else:
     def _circuit_exception_handler(self, etype, value, tb, tb_offset=None):
-        print "error:", value
+        print("error:", value)
     get_ipython().set_custom_exc((CircuitException,), _circuit_exception_handler)
 
 
@@ -53,12 +53,12 @@ class DC_Values(object):
         self.o = o
     def show(self):
         with dk_lib.printoptions(linewidth=200):
-            print "v =", self.v
-            print "x =", self.x
-            print "p =", self.p.A1
-            print "o =", self.o
+            print("v =", self.v)
+            print("x =", self.x)
+            print("p =", self.p.A1)
+            print("o =", self.o)
 
-SIM_PY, SIM_C, SIM_TABLE = range(3)
+SIM_PY, SIM_C, SIM_TABLE = list(range(3))
 
 class Circuit(object):
 
@@ -228,7 +228,7 @@ class Circuit(object):
         ch = len(self._get_op()) + 1
         signal = self.sig.generate(p, self.FS, channels=ch)
         out_t = self.sim_c(signal.input_signal, ii)
-        max_pert = max(abs(signal.signal[:,-1]))
+        max_pert = max(abs(signal.signal[:, -1]))
         self.sim_c.reset()
         signal = self.make_signal_vector(self.sig(s))
         out_c = self.sim_c(signal.input_signal)
@@ -241,7 +241,7 @@ class Circuit(object):
         self._ensure_range()
         def calc(sgn):
             def ff(p):
-                return -sgn * self.sim_c.nonlin_c(p[numpy.newaxis,:])[0,idx]
+                return -sgn * self.sim_c.nonlin_c(p[numpy.newaxis,:])[0, idx]
             return -sgn * ff(opt.brute(ff, self.minmax, finish=None))
         return calc(1) - calc(-1)
 
@@ -286,7 +286,7 @@ class Circuit(object):
     def _ensure_basegrid(self):
         if self.basegrid is None:
             self._ensure_sim_c()
-            self.basegrid = [[[None,('s',4)]] * (self.sim_c.npl + self.sim_c.nni)] * self.sim_c.nno
+            self.basegrid = [[[None, ('s', 4)]] * (self.sim_c.npl + self.sim_c.nni)] * self.sim_c.nno
 
     def _ensure_knot_positions(self):
         #if self.knot_positions is None:
@@ -320,13 +320,13 @@ class Circuit(object):
             h = StringIO()
             npl = self.sim_c.npl
             tables = {}
-            i0v = self.sim_c.nonlin_c(numpy.append(numpy.matrix([0.5]*npl),self.sim_c.p0.T,axis=1))[0]
+            i0v = self.sim_c.nonlin_c(numpy.append(numpy.matrix([0.5]*npl), self.sim_c.p0.T, axis=1))[0]
             if len(self.sim_c.comp_sz) > 1:
                 for i, ((v_slice, p_slice, i_slice), ns) in enumerate(zip(self.sim_c.comp_sz, self.sim_c.comp_namespace)):
                     nni = p_slice.stop - p_slice.start
                     nno = i_slice.stop - i_slice.start
                     self._check_basegrid(self.basegrid[i_slice], ns, nni, npl, nno)
-                    slc = range(npl) + range(p_slice.start+npl, p_slice.stop+npl)
+                    slc = list(range(npl)) + list(range(p_slice.start+npl, p_slice.stop+npl))
                     class Comp:
                         comp_id = ns
                         comp_name = ns
@@ -448,7 +448,7 @@ class Circuit(object):
                 l.append(e)
             else:
                 raise CircuitException("%s unknown. nonlinear circuit elements: %s"
-                                       % (e, ", ".join(d.keys())))
+                                       % (e, ", ".join(list(d.keys()))))
         return l
 
     def _nonlin_function_list(self, elements):
@@ -475,21 +475,21 @@ class Circuit(object):
 
     def show_status(self):
         if self.loaded_filename:
-            print "circuit loaded from: %s" % self.loaded_filename
+            print("circuit loaded from: %s" % self.loaded_filename)
         if self.S:
-            print "circuit element count: %d" % len(self.S)
+            print("circuit element count: %d" % len(self.S))
         if self.module_id:
-            print "module id: %s" % self.module_id
+            print("module id: %s" % self.module_id)
         if self.tempdir:
-            print "temp dir: %s" % self.tempdir
+            print("temp dir: %s" % self.tempdir)
         if self.tempdir_keep:
-            print "keep temp dir: %s" % self.tempdir_keep
+            print("keep temp dir: %s" % self.tempdir_keep)
         if self.parser:
-            print "Parser: %s" % self.parser.get_status()
+            print("Parser: %s" % self.parser.get_status())
         if self.eq:
-            print "EquationSystem: %s" % self.eq.get_status()
+            print("EquationSystem: %s" % self.eq.get_status())
         if self.sim_c:
-            print "C Executor: %s, %d" % (self.sim_c.soname, self.sim_c.nx)
+            print("C Executor: %s, %d" % (self.sim_c.soname, self.sim_c.nx))
 
     def make_signal_vector(self, signal):
         return self.sig.generate(signal, self.FS, self._get_op())
@@ -497,13 +497,13 @@ class Circuit(object):
     def print_netlist(self, values=False):
         self._check_netlist()
         for row in self.S:
-            print "%s: %s" % (row[0], ", ".join([str(v) for v in row[1:]]))
+            print("%s: %s" % (row[0], ", ".join([str(v) for v in row[1:]])))
         if values:
-            print
-            for e, v in sorted((str(e), v) for e, v in self.V.items()):
+            print()
+            for e, v in sorted((str(e), v) for e, v in list(self.V.items())):
                 if isinstance(v, float):
                     v = eng_str(v)
-                print "%s = %s" % (e, v)
+                print("%s = %s" % (e, v))
 
     def read_gschem(self, filename, defs=None):
         self._clear_all()
@@ -514,7 +514,7 @@ class Circuit(object):
         v["math"] = math
         if defs:
             v.update(defs)
-        exec mk_netlist.read_netlist(filename) in v
+        exec(mk_netlist.read_netlist(filename), v)
         self.S = v["S"]
         self.V = v["V"]
         self.loaded_filename = filename
@@ -527,7 +527,7 @@ class Circuit(object):
         v["Tubes"] = circ.Tubes
         v["math"] = math
         with open(filename) as f:
-            exec f in v
+            exec(f, v)
         self.S = v["S"]
         self.V = v["V"]
         self.loaded_filename = filename
@@ -639,7 +639,7 @@ class Circuit(object):
             for i, row in enumerate(self.S):
                 for c in row[1:]:
                     if c in comp and not excluded_row(row):
-                        comp |= set([j for j in row[1:] if j != models.GND])
+                        comp |= {j for j in row[1:] if j != models.GND}
                         dl.append(i)
                         found = True
                         break
@@ -652,9 +652,9 @@ class Circuit(object):
             self.parser.update(self.S, self.V)
 
     def split_circuit(self, parts):
-        for block, (cuts, inputs, outputs) in parts.items():
+        for block, (cuts, inputs, outputs) in list(parts.items()):
             c = Circuit(copy_from=self)
-            for net, els in cuts.items():
+            for net, els in list(cuts.items()):
                 c.remove_connected(net, exclude=cuts)
             if inputs:
                 c.set_in_nets(*[p[0] for p in inputs])
@@ -689,7 +689,7 @@ class Circuit(object):
 
     def print_func_names(self):
         self._ensure_parser()
-        print ", ".join(["%s:%s" % e for e in self.parser.element_name["N"]])
+        print(", ".join(["%s:%s" % e for e in self.parser.element_name["N"]]))
 
     def get_dc_values(self):
         self._ensure_dc_values()
@@ -700,7 +700,7 @@ class Circuit(object):
         keep_dc = kw.get('keep_dc', len(elements) != 0)
         self._ensure_parser()
         el = self._nonlin_function_list(elements)
-        S = [tuple([models.NODES]+[v[1] for v in sorted([(v, k) for k, v in self.parser.nodes.items()])])]
+        S = [tuple([models.NODES]+[v[1] for v in sorted([(v, k) for k, v in list(self.parser.nodes.items())])])]
         V = dict(self.V)
         for e in self.S:
             if e[0] in el:
@@ -727,7 +727,7 @@ class Circuit(object):
         S = []
         Nr = self.parser.N["Nr"]
         Nl = self.parser.N["Nl"]
-        nodes = list(sorted(self.parser.nodes.keys(), key=lambda v: self.parser.nodes[v]))
+        nodes = list(sorted(list(self.parser.nodes.keys()), key=lambda v: self.parser.nodes[v]))
         def idx(a, v):
             a = numpy.nonzero(numpy.ravel(a == v))[0]
             if len(a) == 0:
@@ -741,7 +741,7 @@ class Circuit(object):
                     for j in jl:
                         v = models.VCCS(str(e) + "l%d%d" % (i, j))
                         S.append((v, idx(Nl[j], 1), idx(Nl[j], -1), idx(Nr[i], 1), idx(Nr[i], -1)))
-                        dG = -J[i,j]
+                        dG = -J[i, j]
                         if keep_dc:
                             i0 = Jc[i]/len(jl) + dG*self.dc_values.v[j]
                         else:
@@ -769,7 +769,7 @@ class Circuit(object):
         self.sim_filter.print_coeffs('b', b, f)
         self.sim_filter.print_coeffs('a', a, f)
         B, A, c = self.sim_filter.transform_bilinear(terms)
-        print >>f, "\nc = %s;" % c
+        print("\nc = %s;" % c, file=f)
         self.sim_filter.print_coeffs('B', B, f)
         self.sim_filter.print_coeffs('A', A, f)
         if filename is not None:
@@ -812,9 +812,9 @@ class Circuit(object):
         else:
             dspname = "{0}.dsp".format(filename)
             uiname = "{0}_ui.cc".format(filename)
-            with open(dspname,"w") as f:
+            with open(dspname, "w") as f:
                 f.write(dsp)
-            with open(uiname,"w") as f:
+            with open(uiname, "w") as f:
                 f.write(ui)
 
     def create_faust_module(self, module_id=None, symbolic=False, FS=None, pre_filter=None):
@@ -890,13 +890,13 @@ class Circuit(object):
             fname = os.path.join(path, vid+".so")
             s = "LV2 bundle [%s]" % s
             shutil.copy(mod, fname)
-            print "LV2 bundle [%s module] copied to '%s'" % (s, path)
+            print("LV2 bundle [%s module] copied to '%s'" % (s, path))
         else:
             if path is None:
                 path = os.path.expanduser("~/.config/guitarix/plugins/.")
             fname = os.path.join(path, self._get_module_id()+".so")
             shutil.copy(mod, fname)
-            print "%s module copied to '%s'" % (s, fname)
+            print("%s module copied to '%s'" % (s, fname))
 
     @staticmethod
     def _get_samples(data, count):
@@ -920,14 +920,14 @@ class Circuit(object):
                 pylab.plot(self._get_samples(timeline, count), result, "rx")
             pylab.show()
         if test.printout:
-            print repr(samples)
+            print(repr(samples))
             return True
         error = numpy.max(abs(result - samples)) / numpy.max(abs(result))
         if (error > max_error).any():
-            print "%s: Difference = %g (> %g)" % (self._get_module_id(), error, max_error)
+            print("%s: Difference = %g (> %g)" % (self._get_module_id(), error, max_error))
             return False
         else:
-            print "%s: OK" % self._get_module_id()
+            print("%s: OK" % self._get_module_id())
             return True
         
     def set_pot_variable(self, name, val):
@@ -1001,7 +1001,7 @@ def _init():
             if _display_traceback:
                 logging.getLogger(value.logger).error(value)
             else:
-                print "ERROR:%s:%s" % (value.logger or "root", value)
+                print("ERROR:%s:%s" % (value.logger or "root", value))
                 return
         if _excepthook is not None:
             _excepthook(tp, value, traceback)

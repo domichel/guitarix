@@ -1,7 +1,7 @@
 import numpy as np
 import ctypes as ct
 
-__all__ = ["ab09ad","ab09ax","tb01id","tb01wd"]
+__all__ = ["ab09ad", "ab09ax", "tb01id", "tb01wd"]
 
 def c_arr(w=False):
     flags = ['F']
@@ -37,7 +37,7 @@ slicot.ab09ad_.argtypes = [
     ct.POINTER(ct.c_int), #LDC,
     c_arr(True), #HSV,
     ct.POINTER(ct.c_double), #TOL,
-    np.ctypeslib.ndpointer(dtype=ct.c_int, ndim=1, flags=["F","W"]), #IWORK,
+    np.ctypeslib.ndpointer(dtype=ct.c_int, ndim=1, flags=["F", "W"]), #IWORK,
     c_arr(True), #DWORK,
     ct.POINTER(ct.c_int), #LDWORK,
     ct.POINTER(ct.c_int), #IWARN,
@@ -68,10 +68,10 @@ def ab09ad(dico, job, equil, A, B, C, nr=None, tol=0):
         ct.byref(_nr), Ar, ct.byref(lda), Br, ct.byref(ldb), Cr, ct.byref(ldc),
         hsv, ct.byref(_tol), iwork, dwork, ct.byref(ldwork), ct.byref(iwarn), ct.byref(info))
     if iwarn.value != 0:
-        print "ab09ad:", (
+        print(("ab09ad:", (
             "The selected order NR is greater than the order of a minimal\n"
             "realization of the given system. The order has been set according\n"
-            "to the minimal realization of the system.")
+            "to the minimal realization of the system.")))
     if info.value != 0:
         if info.value < 0:
             raise ValueError("%dth input argument is illegal" % -info.value())
@@ -84,9 +84,9 @@ def ab09ad(dico, job, equil, A, B, C, nr=None, tol=0):
         raise ValueError("unknown error value %d" % info.value)
     nr = _nr.value
     if nr != Ar.shape[1]:
-        Ar = Ar[:nr,:nr]
+        Ar = Ar[:nr, :nr]
         Br = Br[:nr]
-        Cr = Cr[:,:nr]
+        Cr = Cr[:, :nr]
     return Ar, Br, Cr, hsv
 
 ################################################################
@@ -113,7 +113,7 @@ slicot.ab09ax_.argtypes = [
     c_mat(True), #TI,
     ct.POINTER(ct.c_int), #LDTI,
     ct.POINTER(ct.c_double), #TOL,
-    np.ctypeslib.ndpointer(dtype=ct.c_int, ndim=1, flags=["F","W"]), #IWORK,
+    np.ctypeslib.ndpointer(dtype=ct.c_int, ndim=1, flags=["F", "W"]), #IWORK,
     c_arr(True), #DWORK,
     ct.POINTER(ct.c_int), #LDWORK,
     ct.POINTER(ct.c_int), #IWARN,
@@ -135,7 +135,7 @@ def ab09ax(dico, job, A, B, C, nr=None, tol=0):
     n = Ar.shape[0]
     m = Br.shape[1]
     p = Cr.shape[0]
-    minsz = max(1,n*(max(n,m,p)+5) + n*(n+1)/2)
+    minsz = max(1, n*(max(n, m, p)+5) + n*(n+1)/2)
     dwork = np.zeros(minsz * 2, dtype=np.float64, order='F')
     iwarn = ct.c_int()
     info = ct.c_int()
@@ -153,10 +153,10 @@ def ab09ax(dico, job, A, B, C, nr=None, tol=0):
         hsv, T, ct.byref(ldt), Ti, ct.byref(ldti), ct.byref(_tol),
         iwork, dwork, ct.byref(ldwork), ct.byref(iwarn), ct.byref(info))
     if iwarn.value != 0:
-        print "ab09ad:", (
+        print(("ab09ad:", (
             "The selected order NR is greater than the order of a minimal\n"
             "realization of the given system. The order has been set according\n"
-            "to the minimal realization of the system.")
+            "to the minimal realization of the system.")))
     if info.value != 0:
         if info.value < 0:
             raise ValueError("%dth input argument is illegal" % -info.value())
@@ -167,10 +167,10 @@ def ab09ax(dico, job, A, B, C, nr=None, tol=0):
         raise ValueError("unknown error value %d" % info.value)
     nr = _nr.value
     if nr != Ar.shape[1]:
-        Ar = Ar[:nr,:nr]
+        Ar = Ar[:nr, :nr]
         Br = Br[:nr]
-        Cr = Cr[:,:nr]
-        T = T[:,:nr]
+        Cr = Cr[:, :nr]
+        T = T[:, :nr]
         Ti = Ti[:nr,:]
     return T, Ti, Ar, Br, Cr, hsv
 

@@ -18,5 +18,5 @@ c1.plugindef.id = "input12at7"
 c1.set_module_id(module_id)
 c1.read_gschem(schema)
 c1.create_faust_module()
-print vars(c1)
+print((vars(c1)))
 #c1.deploy()

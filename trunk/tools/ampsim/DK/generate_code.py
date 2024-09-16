@@ -1,4 +1,4 @@
-from __future__ import division
+
 import math, sys
 from collections import OrderedDict
 import sympy as sp
@@ -52,7 +52,7 @@ class Structure(object):
             n += 1
         l = [None]*n
         s2 = set()
-        for k, v in kw.items():
+        for k, v in list(kw.items()):
             try:
                 i = s[k]
             except KeyError:
@@ -282,8 +282,8 @@ class NonlinFunctionCC(object):
                         l.append("}\n")
                     jj += 1
             if shape_transform:
-                l.append("pt.head<%d>() = ((Spm0 * PP1 + Ssm0) * PP1 + Sam0) * res.head<%d>();\n" % (nn2,nn2))
-                l.append("pt.tail<%d>() = ((Spm0 * PP1 + Ssm0) * PP1 + Sam0) * res.tail<%d>();\n" % (nn2,nn2))
+                l.append("pt.head<%d>() = ((Spm0 * PP1 + Ssm0) * PP1 + Sam0) * res.head<%d>();\n" % (nn2, nn2))
+                l.append("pt.tail<%d>() = ((Spm0 * PP1 + Ssm0) * PP1 + Sam0) * res.tail<%d>();\n" % (nn2, nn2))
                 l.append("%s << %s;\n" % (VectorAccess('i', param=True, block=i0_slice),
                                           ", ".join(["pt(%d)" % v for v in spliced(nn2)])))
         else:
@@ -495,7 +495,7 @@ class NonlinCode(object):
             else:
                 base["iblockV"] = ""
         if self.solver_dict:
-            for k, v in self.solver_dict.items():
+            for k, v in list(self.solver_dict.items()):
                 base["solver_"+k] = v
         ini = dict(
             p = MatrixAccess('mp'),
@@ -707,7 +707,7 @@ class UpdateMatrix(object):
             expr = f.subs(a, pot[i]) * p
             l.append(expr)
         d["pot_vars"] = ",".join(['"%s"' % v for v in self.pot_list])
-        d["pot"] = ",".join([str(self.pot.get(v,0.5)) for v in self.pot_list])
+        d["pot"] = ",".join([str(self.pot.get(v, 0.5)) for v in self.pot_list])
         nx = eq.nx
         no = eq.no
         np = eq.np
@@ -804,7 +804,7 @@ class LinearCode(object):
             pblock = None
         d["m_cols"] = eq.get_mx_cols()
         d["gen_mp"] = gen_linear_combination(
-            self.glob, VectorAccess('mp',block=pblock), 'dp', Mp, eq.get_Mp())
+            self.glob, VectorAccess('mp', block=pblock), 'dp', Mp, eq.get_Mp())
         d["gen_xn"] = gen_linear_combination(
             self.glob, 'xn', 'd', Mx, eq.get_Mx(), Mxc, eq.Bc)
         d["gen_xo"] = gen_linear_combination(
@@ -908,7 +908,7 @@ class CodeGenerator(object):
             d['have_master_slider'] = False
         d['knob_ids'] = [t[0] for t in self.pot_attr]
         d['timecst'] = 0.01
-        d['regs'] = [dict(id=vv[0],name=vv[1],desc="",varidx=i) for i, vv in enumerate(self.pot_attr)]
+        d['regs'] = [dict(id=vv[0], name=vv[1], desc="", varidx=i) for i, vv in enumerate(self.pot_attr)]
         ll = []
         for i, (var, name, loga, inv, expr) in enumerate(self.pot_attr):
             if loga and inv:
@@ -989,7 +989,7 @@ class CodeGenerator(object):
         else:
             d.update(UpdateMatrix(glob, eq, self.pot, self.pot_list, self.pot_func, self.Pv).generate(s))
         if eq.nonlin and eq.nonlin.nno:
-            for k, v in self.solver_dict.items():
+            for k, v in list(self.solver_dict.items()):
                 d["solver_"+k] = v
             s.add(MatrixDeclaration('p', rows=eq.nn, cols=1, pointer=True))
             s.add(MatrixDeclaration('i', rows=eq.nn, cols=1, pointer=True))

@@ -4,11 +4,11 @@ import numpy as np
 class VariableAccess(object):
 
     def __init__(self, name, param, pointer):
-        if isinstance(name, (MatrixDefinition,MatrixDeclaration)):
+        if isinstance(name, (MatrixDefinition, MatrixDeclaration)):
             self.name = name.name
             self.pointer = name.pointer
         else:
-            assert isinstance(name, basestring)
+            assert isinstance(name, str)
             self.name = name
             if pointer is None:
                 self.pointer = param
@@ -278,7 +278,7 @@ def gen_linear_combination(ns, resname, varname, mult, mult_data, add=None, add_
         varname = VectorAccess(varname)
     if not isinstance(mult, MatrixAccess):
         mult = MatrixAccess(mult)
-    if not isinstance(add, (VectorAccess,type(None))):
+    if not isinstance(add, (VectorAccess, type(None))):
         add = VectorAccess(add)
     if mult_data.shape[0] == 0:
         if add is None or add_data.shape[0] == 0:

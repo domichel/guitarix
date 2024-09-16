@@ -13,11 +13,11 @@ def calc_highpass_f0(c1, c2):
     for i, hotpotz in enumerate(numpy.linspace(0, 1, 11)):
         c1.set_pot_variable('hotpotz', hotpotz)
         c1.stream(s)
-        h1 = s.get_spectrum(c1.last_output[:,0], w)
+        h1 = s.get_spectrum(c1.last_output[:, 0], w)
 
         c2.set_pot_variable('hotpotz', hotpotz)
         c2.stream(s)
-        h2 = s.get_spectrum(c2.last_output[:,0], w)
+        h2 = s.get_spectrum(c2.last_output[:, 0], w)
 
         ydata = numpy.log(abs(h1/h2))
         e = numpy.exp(-1j*w)

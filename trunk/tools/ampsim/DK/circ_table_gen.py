@@ -1,5 +1,5 @@
 # -*- coding: utf-8 -*-
-from __future__ import division
+
 
 import math
 import copy
@@ -26,12 +26,12 @@ class gen(object):
             op = self.V["OP"]
         if samples is None:
             samples = timespan*self.FS
-        return np.array((op,),dtype=np.float64).repeat(samples, axis=0)
+        return np.array((op,), dtype=np.float64).repeat(samples, axis=0)
 
     def constant_signal(self, *values):
         a = np.zeros((int(self.timespan*self.FS), len(values)))
         for i, v in enumerate(values):
-            a[:,i] = v
+            a[:, i] = v
         return a
 
     def timeline(self):
@@ -52,7 +52,7 @@ mag_dict = {
     "n": "e-9",
     "p": "e-12",
     "f": "e-15",
-    "" : "",
+    "": "",
     }
 
 class Circ_table(gen):
@@ -118,15 +118,15 @@ double always_inline circclip(double x) {
 
     def signal(self):
         self.sig = np.linspace(0, self.max_sig, 200)
-        a = self.op_signal([0],samples=len(self.sig))
-        a[:,0] += self.sig
+        a = self.op_signal([0], samples=len(self.sig))
+        a[:, 0] += self.sig
         return a
 
     def neg_signal(self):
         self.model += "_neg"
         self.sig = np.linspace(0, -1.0*self.max_sig, 200)
-        a = self.op_signal([0],samples=len(self.sig))
-        a[:,0] += self.sig
+        a = self.op_signal([0], samples=len(self.sig))
+        a[:, 0] += self.sig
         return a
 
     def generate_faust_table(self, p, y, filename=None):
@@ -163,7 +163,7 @@ double always_inline circclip(double x) {
         sys.stdout.write(t2)
         sys.stdout.write(t3)
         sys.stdout.write("\n")
-        sys.stdout.write("%s_clip = circuit_response(%s_table, low, high, step, size) with{\n\n" % (self.model,self.model))
+        sys.stdout.write("%s_clip = circuit_response(%s_table, low, high, step, size) with{\n\n" % (self.model, self.model))
         for i in range(len(y)):
             c += 1
             if c == 2:
@@ -294,8 +294,8 @@ def main(argv):
         t, parser, v.solver, '-p', c_tempdir='/tmp', c_verbose='--c-verbose',
         c_debug_load='', linearize='', c_real=("double"))
     y = p(v.signal())
-    v.generate_table(p,y)
-    v.plot(p,y)
+    v.generate_table(p, y)
+    v.plot(p, y)
 
 if __name__ == "__main__":
     main(sys.argv[1:])

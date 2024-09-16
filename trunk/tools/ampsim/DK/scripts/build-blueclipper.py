@@ -24,7 +24,7 @@ parser = dk_simulator.Parser(v.S, v.V, v.FS)
 p = dk_simulator.get_executor(
     t, parser, v.solver, '-p', c_tempdir='/tmp', c_verbose='--c-verbose',
     c_debug_load='', linearize='', c_real=("double"))
-v.generate_table(p,"dkbuild/blueclipper/1N4148_table.h")
+v.generate_table(p, "dkbuild/blueclipper/1N4148_table.h")
 
 # create plugin
 c1 = Circuit()

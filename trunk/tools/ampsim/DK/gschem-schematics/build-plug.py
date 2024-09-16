@@ -2,7 +2,7 @@
 
 import os
 from shutil import copy2
-import argparse,sys
+import argparse, sys
 import re
 sys.path.append(".")
 
@@ -14,35 +14,35 @@ class ArgParser(argparse.ArgumentParser):
 
 parser = ArgParser(description='Build script to generate guitarix or LV2 plugins from schematic files.', usage='')
 #parser = argparse.ArgumentParser(description='Build script for guitarix plugins.')
-parser.add_argument('-i','--input', metavar='*.sch', nargs='+', help='Input schematic file(s) name(s) [ONE REQUIRED]',required=True)
-parser.add_argument('-n','--name',help='Name for plugin [OPTIONAL]', required=False)
-parser.add_argument('-s','--shortname',help='Shortname for plugin [OPTIONAL]', required=False)
-parser.add_argument('-d','--description',help='Description for plugin [OPTIONAL]', required=False)
-parser.add_argument('-c','--category',help='Category for plugin [OPTIONAL]', required=False)
-parser.add_argument('-m','--module_id',help='Module ID for plugin [OPTIONAL]', required=False)
-parser.add_argument('-p','--plot', type=str, nargs='?', const='freq', help='frequency response (freq), sinewave (sine) or harmonics (harm) plot from the circuit [OPTIONAL]', required=False)
-parser.add_argument('-b','--build',help='build guitarix plugin from the circuit [OPTIONAL]',action="store_true", required=False)
-parser.add_argument('-l','--buildlv2',help='build lv2 plugin from the circuit [OPTIONAL]',action="store_true", required=False)
-parser.add_argument('-F','--buildfaust',help='build faust code only from the circuit [OPTIONAL]',action="store_true", required=False)
-parser.add_argument('--deploy',help='build C++ code only from the circuit [OPTIONAL]',action="store_true", required=False)
-parser.add_argument('-2','--stereo',help='build stereo plugin from the circuit [OPTIONAL]',action="store_true", required=False)
+parser.add_argument('-i', '--input', metavar='*.sch', nargs='+', help='Input schematic file(s) name(s) [ONE REQUIRED]', required=True)
+parser.add_argument('-n', '--name', help='Name for plugin [OPTIONAL]', required=False)
+parser.add_argument('-s', '--shortname', help='Shortname for plugin [OPTIONAL]', required=False)
+parser.add_argument('-d', '--description', help='Description for plugin [OPTIONAL]', required=False)
+parser.add_argument('-c', '--category', help='Category for plugin [OPTIONAL]', required=False)
+parser.add_argument('-m', '--module_id', help='Module ID for plugin [OPTIONAL]', required=False)
+parser.add_argument('-p', '--plot', type=str, nargs='?', const='freq', help='frequency response (freq), sinewave (sine) or harmonics (harm) plot from the circuit [OPTIONAL]', required=False)
+parser.add_argument('-b', '--build', help='build guitarix plugin from the circuit [OPTIONAL]', action="store_true", required=False)
+parser.add_argument('-l', '--buildlv2', help='build lv2 plugin from the circuit [OPTIONAL]', action="store_true", required=False)
+parser.add_argument('-F', '--buildfaust', help='build faust code only from the circuit [OPTIONAL]', action="store_true", required=False)
+parser.add_argument('--deploy', help='build C++ code only from the circuit [OPTIONAL]', action="store_true", required=False)
+parser.add_argument('-2', '--stereo', help='build stereo plugin from the circuit [OPTIONAL]', action="store_true", required=False)
 parser.add_argument('--switch', metavar='N=Name', nargs='+', help='add on/off switch with "Name" for the N\'t circuit [OPTIONAL]', required=False)
-parser.add_argument('-T','--faust_table', help='build faust, instead C based nonlinear response tables [OPTIONAL]',action="store_true", required=False)
-parser.add_argument('-t','--table', metavar='N', type=int, nargs='+', help='build nonlinear response table from the N\'t circuit [OPTIONAL]', required=False)
-parser.add_argument('-g','--table_neg', metavar='N', type=int, nargs='+', help='build negative nonlinear response table from the N\'t circuit (imply --table)[OPTIONAL]', required=False)
-parser.add_argument('-x','--sig_max', metavar='N', type=float, nargs='+', help='max signal send to build the nonlinear response table from the circuit [OPTIONAL]', required=False)
-parser.add_argument('-/','--table_div', metavar='N', type=float, nargs='+', help='divider for nonlinear response table from the circuit [OPTIONAL]', required=False)
-parser.add_argument('-S','--scip_div',help='skip the divider for the negative nonlinear response table[OPTIONAL]',action="store_true", required=False)
-parser.add_argument('-o','--table_op', metavar='N', type=float, nargs='+', help='step operator multiplier for nonlinear response table from the circuit [OPTIONAL]', required=False)
+parser.add_argument('-T', '--faust_table', help='build faust, instead C based nonlinear response tables [OPTIONAL]', action="store_true", required=False)
+parser.add_argument('-t', '--table', metavar='N', type=int, nargs='+', help='build nonlinear response table from the N\'t circuit [OPTIONAL]', required=False)
+parser.add_argument('-g', '--table_neg', metavar='N', type=int, nargs='+', help='build negative nonlinear response table from the N\'t circuit (imply --table)[OPTIONAL]', required=False)
+parser.add_argument('-x', '--sig_max', metavar='N', type=float, nargs='+', help='max signal send to build the nonlinear response table from the circuit [OPTIONAL]', required=False)
+parser.add_argument('-/', '--table_div', metavar='N', type=float, nargs='+', help='divider for nonlinear response table from the circuit [OPTIONAL]', required=False)
+parser.add_argument('-S', '--scip_div', help='skip the divider for the negative nonlinear response table[OPTIONAL]', action="store_true", required=False)
+parser.add_argument('-o', '--table_op', metavar='N', type=float, nargs='+', help='step operator multiplier for nonlinear response table from the circuit [OPTIONAL]', required=False)
 parser.add_argument('--oversample', metavar='N', type=int, help='set oversample rate [OPTIONAL]', required=False)
 parser.add_argument('--fixedrate', metavar='N', type=int, help='set fixed samplerate [OPTIONAL]', required=False)
 parser.add_argument('--samplerate', metavar='N', type=int, help='set samplerate to be used in sim (default 96000) [OPTIONAL]', required=False)
-parser.add_argument('--bypass',  help='add bypass switch  [OPTIONAL]',action="store_true", required=False)
-parser.add_argument('-f','--freqsplit', help='use frequency splitter for all filters [OPTIONAL]',action="store_true", required=False)
-parser.add_argument('-N','--nonlinsplit', help='use frequency splitter only for nonlinear response [OPTIONAL]',action="store_true", required=False)
-parser.add_argument('-v','--vectorize', help='generate vectorized loop [OPTIONAL]',action="store_true", required=False)
-parser.add_argument('-V','--vector_size', metavar='N', type=int, help='use vector size N [OPTIONAL]', required=False)
-parser.add_argument('-r','--reduce_gain', metavar='N=value', nargs='+', help='reduce gain output from the circuit N by value [OPTIONAL]', required=False)
+parser.add_argument('--bypass',  help='add bypass switch  [OPTIONAL]', action="store_true", required=False)
+parser.add_argument('-f', '--freqsplit', help='use frequency splitter for all filters [OPTIONAL]', action="store_true", required=False)
+parser.add_argument('-N', '--nonlinsplit', help='use frequency splitter only for nonlinear response [OPTIONAL]', action="store_true", required=False)
+parser.add_argument('-v', '--vectorize', help='generate vectorized loop [OPTIONAL]', action="store_true", required=False)
+parser.add_argument('-V', '--vector_size', metavar='N', type=int, help='use vector size N [OPTIONAL]', required=False)
+parser.add_argument('-r', '--reduce_gain', metavar='N=value', nargs='+', help='reduce gain output from the circuit N by value [OPTIONAL]', required=False)
 
 
 args = parser.parse_args()
@@ -124,7 +124,7 @@ freq_split = fi.filterbank(3, (86.0,210.0,1200.0,6531.0));
 
 class Filter(object):
 
-    def calc_highpass_f0(self,c1, c2, pot):
+    def calc_highpass_f0(self, c1, c2, pot):
         from scipy.optimize import curve_fit
         sig = Signal()
         s = c1.make_signal_vector(sig(0.01*sig.impulse(), timespan=1))
@@ -134,11 +134,11 @@ class Filter(object):
         for i, Level in enumerate(numpy.linspace(0, 1, 11)):
             c1.set_pot_variable(pot, Level)
             c1.stream(s)
-            h1 = s.get_spectrum(c1.last_output[:,0], w)
+            h1 = s.get_spectrum(c1.last_output[:, 0], w)
 
             c2.set_pot_variable(pot, Level)
             c2.stream(s)
-            h2 = s.get_spectrum(c2.last_output[:,0], w)
+            h2 = s.get_spectrum(c2.last_output[:, 0], w)
 
             ydata = numpy.log(abs(h1/h2))
             e = numpy.exp(-1j*w)
@@ -153,7 +153,7 @@ class Filter(object):
 
 class FrequencyPlot(object):
 
-    def freq_plot(self, c1,name):
+    def freq_plot(self, c1, name):
         sig = Signal()
         s = c1.make_signal_vector(sig(sig.impulse(), timespan=1))
         c1.stream(s)
@@ -167,7 +167,7 @@ class FrequencyPlot(object):
         pylab.ylabel('Magnitude')
         pylab.show()
 
-    def sine_plot(self, c1,name):
+    def sine_plot(self, c1, name):
         sig = Signal()
         s = c1.make_signal_vector(sig(sig.sine(), timespan=0.00907))
         c1.stream(s)
@@ -179,11 +179,11 @@ class FrequencyPlot(object):
         pylab.ylabel('Magnitude')
         pylab.show()
 
-    def harmonic_plot(self, c1,name):
+    def harmonic_plot(self, c1, name):
         sig = Signal()
         s = c1.make_signal_vector(sig(sig.sweep()))
         c1.stream(s)
-        s.plot(c1.last_output,"Harmonic")
+        s.plot(c1.last_output, "Harmonic")
         ax = pylab.gca()
         ax.grid()
         ax.yaxis.set_major_formatter(pylab.FormatStrFormatter('%d dB'))
@@ -197,31 +197,31 @@ class FrequencyPlot(object):
 class Generators(object):
 
     def generate_nonlin_table(self, c1, modulename, sig_max, table_op, scip_div, table_neg, table_div=None, faust_table=None):
-        v = ci.Circ_table(modulename, c1.S,c1.V, sig_max, table_op, table_div)
+        v = ci.Circ_table(modulename, c1.S, c1.V, sig_max, table_op, table_div)
         parser = dk_simulator.Parser(v.S, v.V, v.FS)
         p = dk_simulator.get_executor(
         modulename, parser, v.solver, '-p', c_tempdir='/tmp', c_verbose='--c-verbose',
         c_debug_load='', linearize='', c_real=("double"))
         y = p(v.signal())
         if (faust_table) :
-            td = v.generate_faust_table(p, y,"")
+            td = v.generate_faust_table(p, y, "")
         else :
-            td = v.generate_table(p, y,"")
-        v.plot(p,y)
+            td = v.generate_table(p, y, "")
+        v.plot(p, y)
         if (table_neg):
             if (scip_div) :
                 td = None
-            v = ci.Circ_table(modulename+"_neg", c1.S,c1.V, -1.0*sig_max, table_op, td)
+            v = ci.Circ_table(modulename+"_neg", c1.S, c1.V, -1.0*sig_max, table_op, td)
             parser = dk_simulator.Parser(v.S, v.V, v.FS)
             p = dk_simulator.get_executor(
             modulename, parser, v.solver, '-p', c_tempdir='/tmp', c_verbose='--c-verbose',
             c_debug_load='', linearize='', c_real=("double"))
             y = p(v.signal())
             if (faust_table) :
-                v.generate_faust_table(p, y,"")
+                v.generate_faust_table(p, y, "")
             else :
-                td = v.generate_table(p, y,"")
-            v.plot(p,y)
+                td = v.generate_table(p, y, "")
+            v.plot(p, y)
 
     def write_final_file(self, a, dspfile,fdata,dspfileui,fuidata,freqs,gain_stages,switch=None,stereo=None,faust_table=None,bypass=None):
         button = ''
@@ -232,16 +232,16 @@ class Generators(object):
                     process_line += "\nproc = "
                 else:
                     process_line = "\nprocess = "
-                for x in xrange(1,a+1,1):
+                for x in range(1, a+1, 1):
                     if str(x) in switch:
-                        process_line += 'ba.bypass_fade(ma.SR/10, 1 - b%s, p%s) ' % (x,x)
-                        button += '\nb%s = checkbox("%s[name:%s");' % (x,switch[str(x)],switch[str(x)])
+                        process_line += 'ba.bypass_fade(ma.SR/10, 1 - b%s, p%s) ' % (x, x)
+                        button += '\nb%s = checkbox("%s[name:%s");' % (x, switch[str(x)], switch[str(x)])
                     else:
                         process_line += ' p%s ' % x
                     if str(x) in gain_stages:
                         stage = 'p%s' % x
                         gain_stage = ' : *(%s)' % gain_stages[str(x)]
-                        process_line = process_line.replace(stage,stage+gain_stage)
+                        process_line = process_line.replace(stage, stage+gain_stage)
                     if a>x :
                         process_line += ':'
                     else :
@@ -252,16 +252,16 @@ class Generators(object):
                 fdata += process_line
             else:
                 process_line = "\namp = "
-                for x in xrange(1,a+1,1):
+                for x in range(1, a+1, 1):
                     if str(x) in switch:
-                        process_line += 'ba.bypass_fade(ma.SR/10, 1 - b%s, p%s) ' % (x,x)
-                        button += '\nb%s = checkbox("%s[name:%s");\n' % (x,switch[str(x)],switch[str(x)])
+                        process_line += 'ba.bypass_fade(ma.SR/10, 1 - b%s, p%s) ' % (x, x)
+                        button += '\nb%s = checkbox("%s[name:%s");\n' % (x, switch[str(x)], switch[str(x)])
                     else:
                         process_line += ' p%s ' % x
                     if str(x) in gain_stages:
                         stage = 'p%s' % x
                         gain_stage = ' : *(%s)' % gain_stages[str(x)]
-                        process_line = process_line.replace(stage,stage+gain_stage)
+                        process_line = process_line.replace(stage, stage+gain_stage)
                     if a>x :
                         process_line += ':'
                     else :
@@ -280,16 +280,16 @@ class Generators(object):
         else:
             if not freqs:
                 process_line = "\nchanel = "
-                for x in xrange(1,a+1,1):
+                for x in range(1, a+1, 1):
                     if str(x) in switch:
-                        process_line += 'ba.bypass_fade(ma.SR/10, 1 - b%s, p%s) ' % (x,x)
-                        button += '\nb%s = checkbox("%s[name:%s");' % (x,switch[str(x)],switch[str(x)])
+                        process_line += 'ba.bypass_fade(ma.SR/10, 1 - b%s, p%s) ' % (x, x)
+                        button += '\nb%s = checkbox("%s[name:%s");' % (x, switch[str(x)], switch[str(x)])
                     else:
                         process_line += ' p%s ' % x
                     if str(x) in gain_stages:
                         stage = 'p%s' % x
                         gain_stage = ' : *(%s)' % gain_stages[str(x)]
-                        process_line = process_line.replace(stage,stage+gain_stage)
+                        process_line = process_line.replace(stage, stage+gain_stage)
                     if a>x :
                         process_line += ':'
                     else :
@@ -305,16 +305,16 @@ class Generators(object):
                 fdata += process_line
             else:
                 process_line = "\namp = "
-                for x in xrange(1,a+1,1):
+                for x in range(1, a+1, 1):
                     if str(x) in switch:
-                        process_line += 'ba.bypass_fade(ma.SR/10, 1 - b%s, p%s) ' % (x,x)
-                        button += '\nb%s = checkbox("%s[name:%s");' % (x,switch[str(x)],switch[str(x)])
+                        process_line += 'ba.bypass_fade(ma.SR/10, 1 - b%s, p%s) ' % (x, x)
+                        button += '\nb%s = checkbox("%s[name:%s");' % (x, switch[str(x)], switch[str(x)])
                     else:
                         process_line += ' p%s ' % x
                     if str(x) in gain_stages:
                         stage = 'p%s' % x
                         gain_stage = ' : *(%s)' % gain_stages[str(x)]
-                        process_line = process_line.replace(stage,stage+gain_stage)
+                        process_line = process_line.replace(stage, stage+gain_stage)
                     if a>x :
                         process_line += ':'
                     else :
@@ -340,10 +340,10 @@ class Generators(object):
         x = 1
         for line in button.split('\n'):
             if not len(line.strip()) == 0 :
-                fuidata = fuidata.replace('b.openHorizontalBox("");','b.openHorizontalBox("");\n\n    b.create_switch("minitoggle",PARAM("%s"), "%s");') % (switch[str(x)],switch[str(x)])
+                fuidata = fuidata.replace('b.openHorizontalBox("");', 'b.openHorizontalBox("");\n\n    b.create_switch("minitoggle",PARAM("%s"), "%s");') % (switch[str(x)], switch[str(x)])
                 x = x+1
         if (bypass):
-            fuidata = fuidata.replace('b.openHorizontalBox("");','b.openHorizontalBox("");\n\n    b.create_switch("switch",PARAM("Enable"), "Enable");')
+            fuidata = fuidata.replace('b.openHorizontalBox("");', 'b.openHorizontalBox("");\n\n    b.create_switch("switch",PARAM("Enable"), "Enable");')
 
         with open(dspfileui, 'w') as f:
             f.write(fuidata)
@@ -351,9 +351,9 @@ class Generators(object):
 
     def generate_gx_plugin(self, arg, dspfile, rs, vec, vs, nonlin=None):
         if nonlin :
-            print ("build nonlin gx_plugin from: %s" % arg)
+            print(("build nonlin gx_plugin from: %s" % arg))
         else :
-            print ("build gx_plugin from: %s" % arg)
+            print(("build gx_plugin from: %s" % arg))
         datatype="double"
         pgm = os.path.abspath("../../build-faust")
         opts = " " if datatype == "float" else ""
@@ -367,9 +367,9 @@ class Generators(object):
 
     def generate_lv2_plugin(self, arg, dspfile, tablename, modulename, name, rs, vec, vs, nonlin=None, nonlin_neg=None, faust_table=None):
         if nonlin :
-            print ("build nonlin lv2_plugin from: %s" % arg)
+            print(("build nonlin lv2_plugin from: %s" % arg))
         else :
-            print ("build lv2_plugin from: %s" % arg)
+            print(("build lv2_plugin from: %s" % arg))
         p = os.getcwd()
         os.chdir("buildlv2/")
         pgm = os.path.abspath("./make_lv2_X11bundle.sh")
@@ -384,7 +384,7 @@ class Generators(object):
         else :
             result = os.system("%s -p ../%s %s -r -n  %s" % (pgm, dspfile, opt, name ))
         if (result):
-            print ('\033[91m'+"Error, see message above"+'\033[0m')
+            print(('\033[91m'+"Error, see message above"+'\033[0m'))
             exit (1)
         # copy table to bundle
         if not faust_table :
@@ -460,7 +460,7 @@ class DKbuilder(object):
     if (args.switch):
         switch = parse_vars(args.switch)
 
-    def index_exists(self,ls, i):
+    def index_exists(self, ls, i):
         return (0 <= i < len(ls)) or (-len(ls) <= i < 0)
 
     def build(self):
@@ -481,7 +481,7 @@ class DKbuilder(object):
         # generate faust code and nonlin table
         for sch in args.input:
             dsp_counter +=1
-            print ("\nInput file %s: %s" % (dsp_counter, args.input[dsp_counter-1]))
+            print(("\nInput file %s: %s" % (dsp_counter, args.input[dsp_counter-1])))
            # fileName, fileExtension = os.path.splitext(args.input[dsp_counter-1])
            # if fileExtension == ".dsp":
            #     read_dsp_file(args.input[dsp_counter-1])
@@ -494,7 +494,7 @@ class DKbuilder(object):
             module_id = args.module_id
             if not module_id:
                 module_id = self.modulename
-            print ("module_id: %s" % module_id )
+            print(("module_id: %s" % module_id ))
 
             dst = 'dkbuild/%s/' % self.modulename
             dspname = dst+self.modulename
@@ -533,11 +533,11 @@ class DKbuilder(object):
             if args.plot:
                 f = FrequencyPlot()
                 if args.plot == "harm":
-                    f.harmonic_plot(c1,self.name)
+                    f.harmonic_plot(c1, self.name)
                 elif args.plot == "sine":
-                    f.sine_plot(c1,self.name)
+                    f.sine_plot(c1, self.name)
                 else:
-                    f.freq_plot(c1,self.name)
+                    f.freq_plot(c1, self.name)
                 # generate faust source and build dir
             if args.deploy:
                 g.deploy_c(c1)
@@ -557,15 +557,15 @@ class DKbuilder(object):
                     tn = False
                     self.tablename[dsp_counter-1] = schema.split('.')[0].lower()
                     table_counter += 1
-                    if args.sig_max and self.index_exists(args.sig_max,table_counter-1) :
+                    if args.sig_max and self.index_exists(args.sig_max, table_counter-1) :
                         m = args.sig_max[table_counter-1]
                     else :
                         m = 1.4
-                    if args.table_op and self.index_exists(args.table_op,table_counter-1):
+                    if args.table_op and self.index_exists(args.table_op, table_counter-1):
                         o = args.table_op[table_counter-1]
                     else:
                         o = 1.0
-                    if args.table_div and self.index_exists(args.table_div,table_counter-1):
+                    if args.table_div and self.index_exists(args.table_div, table_counter-1):
                         d = args.table_div[table_counter-1]
                     else:
                         d = None
@@ -573,7 +573,7 @@ class DKbuilder(object):
                         tn = True
                         if (args.scip_div):
                             s = True
-                    g.generate_nonlin_table(c1, self.tablename[dsp_counter-1], m, o, s, tn, d,args.faust_table)
+                    g.generate_nonlin_table(c1, self.tablename[dsp_counter-1], m, o, s, tn, d, args.faust_table)
                     if (args.faust_table) :
                         tsrc = 'dkbuild/%s_table.lib' %  self.tablename[dsp_counter-1]
                         with open(tsrc, 'r') as f:
@@ -597,7 +597,7 @@ class DKbuilder(object):
                     if (tn):
                         faustdsp = faustdsp.replace('with', ': %sclip with' ) % self.tablename[dsp_counter-1]
                         if (args.faust_table) :
-                            faustdsp = faustdsp.replace('//TABLE', '%s\n%s') % (mytable,myneg_table)
+                            faustdsp = faustdsp.replace('//TABLE', '%s\n%s') % (mytable, myneg_table)
                             faustdsp = faustdsp.replace('process', '%s\nprocess') % dlimer
                             if (args.nonlinsplit):
                                 faustdsp +=  '\n{st}p = _<: ba.if(fsignbit(_), {st}_neg_clip, {st}_clip) :>_ ;\n'.format(st=self.tablename[dsp_counter-1])
@@ -664,7 +664,7 @@ class DKbuilder(object):
                 fuidata += faustui
 
         if any ([args.build, args.buildlv2, args.buildfaust]):
-            g.write_final_file(dsp_counter,dspfile,fdata,dspfileui,fuidata,self.frs,self.gain_stages,self.switch,args.stereo,args.faust_table,args.bypass)
+            g.write_final_file(dsp_counter, dspfile, fdata, dspfileui, fuidata, self.frs, self.gain_stages, self.switch, args.stereo, args.faust_table, args.bypass)
         # create a guitarix module
         if args.build or (not args.table and not args.plot and not args.buildlv2 and not args.buildfaust and not args.deploy) :
             g.generate_gx_plugin(args.input, dspfile, self.rs, self.vec, self.vs, args.table)

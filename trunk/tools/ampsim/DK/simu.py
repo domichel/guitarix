@@ -1,5 +1,5 @@
 # -*- coding: utf-8 -*-
-from __future__ import division
+
 
 for pyname, package in (
         ('scipy', 'python-scipy'),
@@ -12,12 +12,13 @@ for pyname, package in (
         raise SystemExit("Need module %s (Debian package: %s)" % (pyname, package))
 
 import sys, itertools, fractions, os, argparse, math, logging
-from cStringIO import StringIO
+from io import StringIO
 from scipy.interpolate import LSQUnivariateSpline
+from functools import reduce
 try:
     from scipy.interpolate import PchipInterpolator
 except ImportError:
-    print "pchip interpolation not available (scipy version too old)"
+    print("pchip interpolation not available (scipy version too old)")
 import pylab as pl
 import numpy as np
 from scipy.signal import correlate
@@ -121,10 +122,10 @@ class TensorSpline(object):
         except (IOError, EOFError):
             self.grid_estimate = np.empty((len(self.basegrid), len(self.ranges)), dtype=object)
             for v, g in enumerate(self.basegrid):
-                self.grid_estimate[v][:] = [np.mgrid[slice(r[0], r[1], 0.5j * t[0])] for r, t in zip(self.ranges,g[0])]
+                self.grid_estimate[v][:] = [np.mgrid[slice(r[0], r[1], 0.5j * t[0])] for r, t in zip(self.ranges, g[0])]
 
     def save_grid_estimate(self):
-        with open(self.grid_estimate_fname(),"w") as f:
+        with open(self.grid_estimate_fname(), "w") as f:
             pickle.dump(self.grid_estimate, f)
 
     @staticmethod
@@ -165,7 +166,7 @@ class TensorSpline(object):
             coords = self.insert_points(coords, add_num_points, self.knot_data[v])
             fnc = self.calc_grid(self.make_grid(coords), g[1], g[2])[v]
             for n in range(len(self.ranges)):
-                kd = self.knot_data[v,n]
+                kd = self.knot_data[v, n]
                 if not kd.used():
                     continue
                 s = list(fnc.shape)
@@ -188,7 +189,7 @@ class TensorSpline(object):
                     else:
                         ss = PchipInterpolator(x, fnc[i])
                         def mklist(kr):
-                            c = kr.c[:,0]
+                            c = kr.c[:, 0]
                             return [c[3], c[2]-c[3]*(kr.xi[-1]-kr.xi[0]), c[1], c[0]]
                         out[i] = np.array([mklist(kr) for kr in ss.polynomials]).flat
                 fnc = out
@@ -201,12 +202,12 @@ class TensorSpline(object):
         x_e += (x_e - x[-2]) * 0.1
         start = k // 2
         end = -(k - start)
-        knots = np.zeros((3,len(x)-k))
+        knots = np.zeros((3, len(x)-k))
         knots[0] = x[start:end]
         knots[1] = np.arange(start, len(x)+end)
         if k % 2:
-            knots[0,:-1] += knots[0,1:]
-            knots[0,-1] += x[end]
+            knots[0, :-1] += knots[0, 1:]
+            knots[0, -1] += x[end]
             knots[0] *= 0.5
         return knots, (x[0], x_e)
 
@@ -266,7 +267,7 @@ class TensorSpline(object):
         ki = np.unique(np.digitize(pos, kn), True)[1]
         idx = [slice(None)]*val.ndim
         l = []
-        for i, j in itertools.izip_longest(ki, ki[1:]):
+        for i, j in itertools.zip_longest(ki, ki[1:]):
             idx[n] = slice(i, j)
             l.append(np.amax(val[idx]))
         a = np.array(l)
@@ -280,7 +281,7 @@ class TensorSpline(object):
         f = reduce(fractions.gcd, idx)
         idx /= f
         a = np.empty(idx[-1], dtype=np.int32)
-        for m, (i, j) in enumerate(itertools.izip_longest(idx[:-1], idx[1:])):
+        for m, (i, j) in enumerate(itertools.zip_longest(idx[:-1], idx[1:])):
             a[i:j] = m
         a += k-1
         return KnotData(np.pad(kn[0], k, 'constant', constant_values=bbox), a, slice(r.start, r.stop, r.step/f), k)
@@ -319,8 +320,8 @@ class TensorSpline(object):
                 rlim = 0
             else:
                 rlim = (np.amin(apply_subcube(np.amin, dfnc, i)[:iend]), np.amax(apply_subcube(np.amax, dfnc, i)[:iend]))
-                print apply_subcube(np.amax, abs(dfnc), i)[iend:]; print iend, dlim; raise SystemExit
-        print "##", dlim, (istart, iend), (llim, rlim)
+                print(apply_subcube(np.amax, abs(dfnc), i)[iend:]); print(iend, dlim); raise SystemExit
+        print("##", dlim, (istart, iend), (llim, rlim))
         return (istart, iend), (llim, rlim)
 
     def find_knots(self):
@@ -335,8 +336,8 @@ class TensorSpline(object):
                 #self.get_support(n, fnc, np.amax(abs(fnc))*(ranges[n].stop-ranges[n].start)/ranges[n].step.imag * 1e-4)
                 ptp = fnc.ptp()
                 if np.amax(fnc.ptp(axis=n)) < 1e-6 * ptp and False: ##FIXME
-                    print "%s[%d,%d]: const: %g" % (self.func.comp_id, v, n, np.amax(fnc.ptp(axis=n)) / ptp)
-                    self.knot_data[v, n] = KnotData(None,None,slice(self.ranges[n][0], self.ranges[n][1], 1j),None)
+                    print("%s[%d,%d]: const: %g" % (self.func.comp_id, v, n, np.amax(fnc.ptp(axis=n)) / ptp))
+                    self.knot_data[v, n] = KnotData(None, None, slice(self.ranges[n][0], self.ranges[n][1], 1j), None)
                     continue
                 k = order[n]
                 #x = np.mgrid[ranges[n]]
@@ -369,22 +370,22 @@ class TensorSpline(object):
                         if am is None:
                             raise ValueError("bad approximation for %s[%d,%d]: %g > %g" % (self.func.comp_id, v, n, mx, e_max))
                         kn = good
-                        kn[2,am] = 1
+                        kn[2, am] = 1
                     else:
                         good = kn
                     if False:
                         xd = np.square(np.diff(ss(kn[:-1], k))).argsort()+1
                     else:
-                        xd = self.max_diff(n, np.pad(kn[0],(1,0),'constant',constant_values=(x[0],)), x, df).argsort()
+                        xd = self.max_diff(n, np.pad(kn[0], (1, 0), 'constant', constant_values=(x[0],)), x, df).argsort()
                     for am in xd:
-                        if not kn[2,am]:
+                        if not kn[2, am]:
                             break
                     else:
                         break
-                    kn = np.append(kn[:,:am],kn[:,am+1:], axis=1)
+                    kn = np.append(kn[:, :am], kn[:, am+1:], axis=1)
                 self.knot_data[v, n] = self.mk_result(kn, bbox, k, rng)
-                self.grid_estimate[v,n] = self.knot_data[v,n].get_knot_grid()
-                print "%s[%d,%d]: (%g), %d -> %d [%s]" % (self.func.comp_id, v, n, e_max, len(kn0[0]), len(kn[0]), fnc.shape)
+                self.grid_estimate[v, n] = self.knot_data[v, n].get_knot_grid()
+                print("%s[%d,%d]: (%g), %d -> %d [%s]" % (self.func.comp_id, v, n, e_max, len(kn0[0]), len(kn[0]), fnc.shape))
                 #print "#", fnc.shape, x.shape, e_max
                 #print kn[:1]
                 #pylab.plot(x, fnc[:,0,:])
@@ -398,7 +399,7 @@ dtp = "treal"
 tiny = np.finfo(np.float64).tiny
 
 def print_float_array(o, name, a, prefix):
-    print >>o, "%s%s %s[%d] = {" % (prefix, dtp, name, a.size)
+    print("%s%s %s[%d] = {" % (prefix, dtp, name, a.size), file=o)
     s = "  "
     i = 0
     a = np.where(abs(a) < 100*tiny, 0, a)
@@ -408,13 +409,13 @@ def print_float_array(o, name, a, prefix):
         s = ","
         i += 1
         if i % 10 == 0:
-            print >>o, ","
+            print(",", file=o)
             s = "  "
-    print >>o, "};"
+    print("};", file=o)
     return a.size * np.float32().nbytes
 
 def print_int_array(o, name, a, prefix):
-    print >>o, "%sint %s[%d] = {" % (prefix, name, a.size)
+    print("%sint %s[%d] = {" % (prefix, name, a.size), file=o)
     s = "  "
     i = 0
     for v in a.ravel('C'):
@@ -422,13 +423,13 @@ def print_int_array(o, name, a, prefix):
         s = ","
         i += 1
         if i % 10 == 0:
-            print >>o, ","
+            print(",", file=o)
             s = "  "
-    print >>o, "};"
+    print("};", file=o)
     return a.size * np.int32().nbytes
 
 def print_maptype_array(o, name, a, prefix):
-    print >>o, "%smaptype %s[%d] = {" % (prefix, name, a.size)
+    print("%smaptype %s[%d] = {" % (prefix, name, a.size), file=o)
     s = "  "
     i = 0
     for v in a.ravel('C'):
@@ -436,9 +437,9 @@ def print_maptype_array(o, name, a, prefix):
         s = ","
         i += 1
         if i % 10 == 0:
-            print >>o, ","
+            print(",", file=o)
             s = "  "
-    print >>o, "};"
+    print("};", file=o)
     align = 4
     return ((a.size + align - 1) // align) * align
 
@@ -461,19 +462,19 @@ def print_intpp_data(o, tag, prefix, func, rgdata, basegrid, Spline=TensorSpline
             if not v.used():
                 continue
             max_idx = max(max_idx, v.mapping[-1])
-    print >>o, "typedef %s maptype;" % Spline.max_idx_to_maptype(max_idx)
+    print("typedef %s maptype;" % Spline.max_idx_to_maptype(max_idx), file=o)
     n = 0
     for iv, val in enumerate(spl.knot_data):
         for v in val:
             if v.used():
                 n += 1
                 v.cut_mapping()
-        print >>o, "%sreal x0%s_%d[%d] = {%s};" % (prefix, tag, iv, n, ", ".join([str(float(v.get_bbox()[0])) for v in val if v.used()]))
-        print >>o, "%sreal xe%s_%d[%d] = {%s};" % (prefix, tag, iv, n, ", ".join([str(float(v.get_bbox()[1])) for v in val if v.used()]))
-        print >>o, "%sreal hi%s_%d[%d] = {%s};" % (prefix, tag, iv, n, ", ".join([str(v.inv_h()) for v in val if v.used()]))
-        print >>o, "%sint k%s_%d[%d] = {%s};" % (prefix, tag, iv, n, ", ".join([str(v.get_order()) for v in val if v.used()]))
-        print >>o, "%sint nmap%s_%d[%d] = {%s};" % (prefix, tag, iv, n, ", ".join([str(v.count()) for v in val if v.used()]))
-        print >>o, "%sint n%s_%d[%d] = {%s};" % (prefix, tag, iv, n, ", ".join([str(v.num_coeffs()) for v in val if v.used()]))
+        print("%sreal x0%s_%d[%d] = {%s};" % (prefix, tag, iv, n, ", ".join([str(float(v.get_bbox()[0])) for v in val if v.used()])), file=o)
+        print("%sreal xe%s_%d[%d] = {%s};" % (prefix, tag, iv, n, ", ".join([str(float(v.get_bbox()[1])) for v in val if v.used()])), file=o)
+        print("%sreal hi%s_%d[%d] = {%s};" % (prefix, tag, iv, n, ", ".join([str(v.inv_h()) for v in val if v.used()])), file=o)
+        print("%sint k%s_%d[%d] = {%s};" % (prefix, tag, iv, n, ", ".join([str(v.get_order()) for v in val if v.used()])), file=o)
+        print("%sint nmap%s_%d[%d] = {%s};" % (prefix, tag, iv, n, ", ".join([str(v.count()) for v in val if v.used()])), file=o)
+        print("%sint n%s_%d[%d] = {%s};" % (prefix, tag, iv, n, ", ".join([str(v.num_coeffs()) for v in val if v.used()])), file=o)
         sz += (2*int_sz+2*float_sz) * n;
         #grd = np.mgrid[ranges]
         #grd_shape = grd.shape
@@ -506,14 +507,14 @@ def print_intpp_data(o, tag, prefix, func, rgdata, basegrid, Spline=TensorSpline
             t = "c%d_%d%s" % (i, iv, tag)
             ci.append(t)
             sz += print_float_array(o, t, coeffs[iv], prefix)
-        print >>o, "%smaptype *map%s_%d[%d] = {%s};" % (prefix, tag, iv, n, ", ".join(ai))
-        print >>o, "%s%s *t%s_%d[%d] = {%s};" % (prefix, dtp, tag, iv, n, ", ".join(ti))
-        print >>o, "%s%s *c%s_%d[%d] = {%s};" % (prefix, dtp, tag, iv, 1, ", ".join(ci))
+        print("%smaptype *map%s_%d[%d] = {%s};" % (prefix, tag, iv, n, ", ".join(ai)), file=o)
+        print("%s%s *t%s_%d[%d] = {%s};" % (prefix, dtp, tag, iv, n, ", ".join(ti)), file=o)
+        print("%s%s *c%s_%d[%d] = {%s};" % (prefix, dtp, tag, iv, 1, ", ".join(ci)), file=o)
     sz += (n + len(basegrid)) * float_sz
     return sz, max_idx, spl
 
 def print_header_file_start(h):
-    print >>h, """\
+    print("""\
 #ifndef _DATA_H
 #define _DATA_H 1
 
@@ -527,33 +528,33 @@ namespace AmpData {
     extern real a1;
     extern int fs;
 
-"""
+""", file=h)
 
 def print_header_file_end(h):
-    print >>h, """\
+    print("""\
 }
 
 #endif /* !_DATA_H */
-"""
+""", file=h)
 
 def print_header_file_entry(h, f):
-    print >>h, "namespace %s { extern splinedata sd; }" % f
+    print("namespace %s { extern splinedata sd; }" % f, file=h)
 
 def print_header(o):
-    print >>o, '#ifndef NO_INTPP_INCLUDES'
-    print >>o, '#include "intpp.h"'
-    print >>o, '#endif'
-    print >>o, "namespace AmpData {"
+    print('#ifndef NO_INTPP_INCLUDES', file=o)
+    print('#include "intpp.h"', file=o)
+    print('#endif', file=o)
+    print("namespace AmpData {", file=o)
     if 0:
         b0, b1, a1 = circuit.PhaseSplitter().feedback_coeff(1.0)
-        print >>o, "real b0 = %g;" % b0
-        print >>o, "real b1 = %g;" % b1
-        print >>o, "real a1 = 1 - %g;" % (1 - a1)
+        print("real b0 = %g;" % b0, file=o)
+        print("real b1 = %g;" % b1, file=o)
+        print("real a1 = 1 - %g;" % (1 - a1), file=o)
     #print >>o, "int fs = %d;" % circuit.FS
     return 3 * np.float32().nbytes + np.int32().nbytes
 
 def print_footer(o):
-    print >>o, "} // namespace AmpData"
+    print("} // namespace AmpData", file=o)
     return 0
 
 
@@ -574,27 +575,27 @@ class ValueGrid(object):
     def max_jacobi(self):
         n = self.values.shape[0]
         m = len(self.ranges)
-        mj = np.zeros((n,m))
+        mj = np.zeros((n, m))
         for i in range(n):
             mj[i] = [np.max(abs(np.diff(self.values[i], axis=j))) for j in range(m)]
         for i in range(m):
             r = self.ranges[i]
             if r.start != r.stop:
-                mj[:,i] /= (r.stop - r.start) / (r.step.imag-1)
+                mj[:, i] /= (r.stop - r.start) / (r.step.imag-1)
             else:
-                mj[:,i] = 0
+                mj[:, i] = 0
         return mj
 
 def estimate_max_jacobi(func, ranges, error, nvals):
     J = None
     n = np.ones(len(ranges), dtype=int) * 2
     while True:
-        v = ValueGrid(func, [slice(r[0],r[1],i*1j) for i, r in zip(n, ranges)], nvals)
+        v = ValueGrid(func, [slice(r[0], r[1], i*1j) for i, r in zip(n, ranges)], nvals)
         J1 = v.max_jacobi()
         if J is not None:
             dv = np.max(abs(J1)+abs(J), axis=0)
             m = 2 * np.max(abs(J1-J), axis=0) / np.where(dv == 0, 1., dv)
-            print "#%s: %s" % (n, m)
+            print("#%s: %s" % (n, m))
             if np.max(m) < error:
                 #print "##", np.max(J1), np.max(v.values)
                 return J1, v
@@ -654,7 +655,7 @@ class MyTensorSpline(TensorSpline):
                         order = 2
                     self.knot_data[kd_idx, i] = self.mk_result(idx, ax, order, tp, slice(ax[0], ax[-1], (ag+1)*1j))
                 else:
-                    self.knot_data[kd_idx, i] = KnotData(None,None,slice(ax[0], ax[-1], 1j),None)
+                    self.knot_data[kd_idx, i] = KnotData(None, None, slice(ax[0], ax[-1], 1j), None)
             kd_idx += 1
 
     @staticmethod
@@ -662,11 +663,11 @@ class MyTensorSpline(TensorSpline):
         xk2 = xk[order:-order]
         N = len(xk2)-1
         sivals = np.empty((order+1, N), dtype=float)
-        for m in xrange(order, -1, -1):
+        for m in range(order, -1, -1):
             fact = np.product(np.arange(m)+1)
             res = splev(xk2[:-1], (xk, cvals, order), m)
             res /= fact
-            sivals[order-m, :] = res
+            sivals[order-m,:] = res
         return sivals
 
     def calc_coeffs(self):
@@ -689,12 +690,12 @@ class MyTensorSpline(TensorSpline):
 
     def mk_result(self, idx, kn, k, tp, r):
         if k is None:
-            return KnotData(None,None,slice(r.start, r.stop, 1j),None)
+            return KnotData(None, None, slice(r.start, r.stop, 1j), None)
         f = reduce(fractions.gcd, idx)
         #idx /= f
         idx = np.divide(idx, f)
         a = np.empty(idx[-1], dtype=np.int32)
-        for m, (i, j) in enumerate(itertools.izip_longest(idx[:-1], idx[1:])):
+        for m, (i, j) in enumerate(itertools.zip_longest(idx[:-1], idx[1:])):
             a[i:j] = m
         a += k-1
         return KnotData(np.pad(kn, k-1, 'edge'), a, slice(r.start, r.stop, 1+(r.step-1)/f), (tp, k))
@@ -717,7 +718,7 @@ class MyTensorSpline(TensorSpline):
         else:
             df = (abs(fi - fv) > prec).any()
         if not df:
-            sl = range(idx) + range(idx+1, len(a))
+            sl = list(range(idx)) + list(range(idx+1, len(a)))
             axes[i] = axes[i][sl]
             s1[i] = sl
             fnc = fnc[s1]
@@ -861,29 +862,29 @@ class TableGenerator(object):
             p = cmod.get_executor()
         a = v.op_signal(timespan=1.02, op=parser.op)
         smpl = lambda tm: int(round(tm*v.FS))
-        a[:,0] += param.input_signal.amplitude * dk_lib.genlogsweep(
+        a[:, 0] += param.input_signal.amplitude * dk_lib.genlogsweep(
             param.input_signal.startfreq, param.input_signal.stopfreq, v.FS,
             smpl(param.input_signal.pre), smpl(param.input_signal.timespan),
             smpl(param.input_signal.post))[0]
         ptp = p(a).ptp()
-        print "ptp =", ptp
-        print "nonlin function: OP value, range:"
-        print np.column_stack((p.p0, p.minmax))
+        print("ptp =", ptp)
+        print("nonlin function: OP value, range:")
+        print(np.column_stack((p.p0, p.minmax)))
 
         nvals = p.nno
         J, vals = estimate_max_jacobi(p.nonlin, p.minmax, param.jacobi_estimate_error, nvals)
         J = np.matrix(J)
         dv = np.amax(np.append(abs(eq.Fo), abs(eq.Fo)*J*abs(eq.G0)*abs(eq.Co), axis=0), axis=0).A
         E = param.maxerr * ptp / np.where(dv == 0, 1e-20, dv)
-        print "function error limits for max out error %g: %s" % (param.maxerr, ", ".join(["%.2g" % vv for vv in E.T]))
+        print("function error limits for max out error %g: %s" % (param.maxerr, ", ".join(["%.2g" % vv for vv in E.T])))
 
         grd_shape = vals.grd.shape
         numpoints = np.product(grd_shape[1:])
         grd = vals.grd.reshape(grd_shape[0], numpoints)
         fnc = vals.values.reshape(nvals, numpoints)
         with dk_lib.printoptions(precision=2, linewidth=200):
-            print "covariance matrix (rows: variables, columns: functions):"
-            print np.cov(grd, fnc)[:len(grd),len(grd):]
+            print("covariance matrix (rows: variables, columns: functions):")
+            print(np.cov(grd, fnc)[:len(grd), len(grd):])
 
         o = StringIO()
         inst = StringIO()
@@ -914,7 +915,7 @@ class TableGenerator(object):
         extra_sources = dict(data_c=o.getvalue(), data_h=h.getvalue(), intpp_inst=inst.getvalue())
         sim = dk_simulator.SimulatePy(dk_simulator.EquationSystem(parser), v.solver)
         cmodt = dk_simulator.BuildCModule(
-            name+"_table", sim, dict(method="table",name=name,maptype=maptype), extra_sources=extra_sources,
+            name+"_table", sim, dict(method="table", name=name, maptype=maptype), extra_sources=extra_sources,
             c_tempdir="gencode", c_verbose=args.c_verbose, linearize=args.linearize, c_real=("float" if args.c_float else "double"))
         pt = cmodt.get_executor()
         self.p = p
@@ -927,7 +928,7 @@ class TableGenerator(object):
         v1 = ValueGrid(p.nonlin, rng, nvals)
         v2 = ValueGrid(pt.nonlin, rng, nvals)
         for i in range(len(Comp.basegrid)):
-            print np.max(abs(v1.values[i]-v2.values[i]))
+            print(np.max(abs(v1.values[i]-v2.values[i])))
 
     @staticmethod
     def max_idx_to_maptype(max_idx):
@@ -941,28 +942,28 @@ class TableGenerator(object):
     @staticmethod
     def print_intpp_data(p):
         o = StringIO()
-        print >>o, "namespace %s {" % p.comp_id
+        print("namespace %s {" % p.comp_id, file=o)
         r, max_idx, spl = print_intpp_data(o, "", "", p, p.ranges, p.basegrid, MyTensorSpline)
         maptype = TableGenerator.max_idx_to_maptype(max_idx)
-        print >>o, "splinecoeffs<maptype> sc[%d] = {" % p.NVALS
+        print("splinecoeffs<maptype> sc[%d] = {" % p.NVALS, file=o)
         f_set = set()
         for j, kn in enumerate(spl.knot_data):
             fu = "splev"
             if kn[0].tp == 'pp':
                 fu = "splev_pp"
             inst = "splinedata<%s>::%s<%s>" % (maptype, fu, ",".join([str(v.get_order()) for v in kn if v.used()]))
-            f_set.add((inst,maptype))
-            print >>o, "\t{x0_%d, xe_%d, hi_%d, k_%d, n_%d, nmap_%d, map_%d, t_%d, c_%d, %s}," % (j, j, j, j, j, j, j, j, j, inst)
-        print >>o, "};"
-        print >>o, "splinedata<maptype> sd = {"
-        print >>o, "\tsc,"
-        print >>o, "\t%d, /* number of calculated values */" % p.NVALS
-        print >>o, "\t%d, /* number of input values */" % p.N_IN
-        print >>o, "\t%d, /* number of output values */" % (p.NVALS-(p.NDIM-p.N_IN))
-        print >>o, "\t%d, /* number of state values */" % (p.NDIM-p.N_IN)
-        print >>o, '\t"%s",' % p.comp_id
-        print >>o, "};"
-        print >>o, "}; /* ! namespace %s */" % p.comp_id
+            f_set.add((inst, maptype))
+            print("\t{x0_%d, xe_%d, hi_%d, k_%d, n_%d, nmap_%d, map_%d, t_%d, c_%d, %s}," % (j, j, j, j, j, j, j, j, j, inst), file=o)
+        print("};", file=o)
+        print("splinedata<maptype> sd = {", file=o)
+        print("\tsc,", file=o)
+        print("\t%d, /* number of calculated values */" % p.NVALS, file=o)
+        print("\t%d, /* number of input values */" % p.N_IN, file=o)
+        print("\t%d, /* number of output values */" % (p.NVALS-(p.NDIM-p.N_IN)), file=o)
+        print("\t%d, /* number of state values */" % (p.NDIM-p.N_IN), file=o)
+        print('\t"%s",' % p.comp_id, file=o)
+        print("};", file=o)
+        print("}; /* ! namespace %s */" % p.comp_id, file=o)
         o.seek(0)
         return r, o.read(), f_set, p.comp_name, p.comp_id, max_idx, spl
 
@@ -988,11 +989,11 @@ class TableGenerator(object):
             print_header_file_entry(h, comp_id)
         sz += print_footer(o)
         l.append("data size sum: %d bytes" % sz)
-        print >>o, "".join(["\n// " + s for s in l])
+        print("".join(["\n// " + s for s in l]), file=o)
         print_header_file_end(h)
         maptype = "unsigned char"
         for v, maptype in sorted(templ):
-            print >>inst, "template int %s(splinecoeffs<%s> *p, real xi[2], real *res);" % (v, maptype)
+            print("template int %s(splinecoeffs<%s> *p, real xi[2], real *res);" % (v, maptype), file=inst)
         return maptype, spl
 
 
@@ -1003,10 +1004,10 @@ class LoadedSchema(circ.Test):
         v["math"] = math
         if hasattr(params, "load_schema"):
             import mk_netlist
-            exec mk_netlist.read_netlist(params.load_schema) in v
+            exec(mk_netlist.read_netlist(params.load_schema), v)
         else:
             with open(params.load_netlist) as f:
-                exec f in v
+                exec(f, v)
         self.S = v["S"]
         self.V = v["V"]
         self.V["OP"] = getattr(params, "OP", [0.])
@@ -1015,7 +1016,7 @@ class LoadedSchema(circ.Test):
                 self.timespan = params.test_signal.timespan
             def signal():
                 a = self.op_signal()
-                a[:,0] += params.test_signal.amplitude * self.sine_signal(params.test_signal.freq)[:,0]
+                a[:, 0] += params.test_signal.amplitude * self.sine_signal(params.test_signal.freq)[:, 0]
                 return a
             setattr(self, "signal", signal)
 
@@ -1039,7 +1040,7 @@ def generate_faust_module(plugindef, b, a, potlist, flt, pre_filter=None, build_
     d['sliders'] = [dict(id=t[0], name=t[1], loga=t[2], inv=t[3]) for t in potlist]
     d['pre_filter'] = '_' if pre_filter is None or pre_filter is "dry_wet" else pre_filter
     d['b_list'] = ",".join(["b%d/a0" % i for i in range(len(b))])
-    d['a_list'] = ",".join(["a%d/a0" % i for i in range(1,len(a))])
+    d['a_list'] = ",".join(["a%d/a0" % i for i in range(1, len(a))])
     d['coeffs'] = "\n\n    ".join(flt.coeffs_as_faust_code('b', b) + flt.coeffs_as_faust_code('a', a))
     if not pre_filter == "dry_wet":
         dsp = dk_templates.faust_filter_template.render(d)
@@ -1069,7 +1070,7 @@ def generate_simple_faust_module(plugindef, b, a, potlist, flt, pre_filter=None,
     d['sliders'] = [dict(id=t[0], name=t[1], loga=t[2], inv=t[3]) for t in potlist]
     d['pre_filter'] = '_' if pre_filter is None or pre_filter is "dry_wet" else pre_filter
     d['b_list'] = ",".join(["b%d/a0" % i for i in range(len(b))])
-    d['a_list'] = ",".join(["a%d/a0" % i for i in range(1,len(a))])
+    d['a_list'] = ",".join(["a%d/a0" % i for i in range(1, len(a))])
     d['coeffs'] = "\n\n    ".join(flt.coeffs_as_faust_code('b', b) + flt.coeffs_as_faust_code('a', a))
     if not pre_filter == "dry_wet":
         dsp = dk_templates.faust_simple_filter_template.render(d)
@@ -1084,9 +1085,9 @@ def build_faust_module(plugindef, b, a, potlist, flt, datatype="float", pre_filt
     uiname = "dkbuild/{0}/{0}_ui.cc".format(modname)
     if not os.path.exists("dkbuild/%s/" % modname):
         os.makedirs("dkbuild/%s/" % modname)
-    with open(dspname,"w") as f:
+    with open(dspname, "w") as f:
         f.write(dsp)
-    with open(uiname,"w") as f:
+    with open(uiname, "w") as f:
         f.write(ui)
     pgm = os.path.abspath("../../build-faust")
     opts = "-s" if datatype == "float" else ""
@@ -1126,13 +1127,13 @@ def create_filter(g, tests, args):
             b, a, terms = f.get_s_coeffs()
             f.print_coeffs('b', b)
             f.print_coeffs('a', a)
-            print "\nH = %s;" % terms
+            print("\nH = %s;" % terms)
         else:
             b, a, terms = f.get_s_coeffs()
             f.print_coeffs('b', b)
             f.print_coeffs('a', a)
             B, A, c = f.transform_bilinear(terms)
-            print "\nc = %s;" % c
+            print("\nc = %s;" % c)
             f.print_coeffs('B', B)
             f.print_coeffs('A', A)
     else:
@@ -1194,7 +1195,7 @@ def create_filter(g, tests, args):
             pl.show()
         elif args.create_module:
             l = []
-            for e in set([e[0] for e in p.element_name["P"]]):
+            for e in {e[0] for e in p.element_name["P"]}:
                 t = v.V[e]
                 if not isinstance(t, dict):
                     t = dict(value=t)
@@ -1224,7 +1225,7 @@ def plot_one(v, args, t):
         v.plot(p)
         if 0:
             for i, (p0, (s, e)) in enumerate(zip(p.p0, p.minmax)):
-                print "%d: %g [%g .. %g]" % (i, p0, s, e)
+                print("%d: %g [%g .. %g]" % (i, p0, s, e))
 
 def plot_output(g, tests, args):
     if args.schema or args.netlist:
@@ -1232,21 +1233,20 @@ def plot_output(g, tests, args):
         plot_one(v, args, t)
         return
     if not tests:
-        testlist = [k for k, v in g.items() if is_test(v)]
-        testlist.sort()
+        testlist = sorted([k for k, v in list(g.items()) if is_test(v)])
         for i, k in enumerate(testlist):
             if k.endswith("_test"):
                 k = k[:-5]
-            print "%2d: %s" % (i, k)
-        print
+            print("%2d: %s" % (i, k))
+        print()
         try:
-            k = testlist[int(raw_input("Please select: "))]
+            k = testlist[int(input("Please select: "))]
         except (ValueError, KeyError):
-            print "not found"
-            raise SystemExit, 1
+            print("not found")
+            raise SystemExit(1)
         except KeyboardInterrupt:
-            print
-            raise SystemExit, 1
+            print()
+            raise SystemExit(1)
         tests = [k]
     for t in tests:
         plot_one(g[t](), args, t)
@@ -1313,8 +1313,7 @@ def main():
         tests.append(t)
     if args.check:
         if not tests:
-            tests = [k for k, v in g.items() if is_test(v) and hasattr(v, 'result')]
-            tests.sort()
+            tests = sorted([k for k, v in list(g.items()) if is_test(v) and hasattr(v, 'result')])
         tn = [t[:-5] if t.endswith("_test") else t for t in tests]
         mlen = reduce(max, [len(t) for t in tn], 0)
         for t, nm in zip(tests, tn):
@@ -1346,12 +1345,12 @@ def main():
         d = dict(sweep=sweep, sine_signal=sine_signal, circ=circ)
         try:
             with open(args.func) as f:
-                exec f in d
+                exec(f, d)
         except IOError:
             raise SystemExit("error: can't open %s" % args.func)
         class params(object):
             jacobi_estimate_error = 0.1
-        for k, v in d.items():
+        for k, v in list(d.items()):
             if k != 'sweep' and not k.startswith("__"):
                 setattr(params, k, v)
         if hasattr(params, "load_schema") or hasattr(params, "load_netlist"):
@@ -1388,7 +1387,7 @@ def main():
             c_verbose=args.c_verbose, c_debug_load=args.c_debug_load)
         a = v.op_signal(timespan=1.02)
         smpl = lambda tm: int(round(tm*v.FS))
-        a[:,0] += 2 * dk_lib.genlogsweep(30, 20000, v.FS, smpl(0.01), smpl(1), smpl(0.01))[0]
+        a[:, 0] += 2 * dk_lib.genlogsweep(30, 20000, v.FS, smpl(0.01), smpl(1), smpl(0.01))[0]
         ptp = p(a).ptp()
         rng = p.minmax
         ifunc = 3
@@ -1399,17 +1398,17 @@ def main():
             #if j <= k:
             #if k <= j:
                 continue
-            x = np.linspace(rng[j][0],rng[j][1],100)
-            z = np.linspace(rng[k][0],rng[k][1],20)
+            x = np.linspace(rng[j][0], rng[j][1], 100)
+            z = np.linspace(rng[k][0], rng[k][1], 20)
             a = [[p0] for p0 in p.p0]
             a[j] = x
             a[k] = z
             y = dk_lib.calc_grid(p.nonlin, dk_lib.mkgrid(a))[ifunc]
             s = [slice(None)] * len(a)
             for n in range(len(s)):
-                if n not in (j,k):
+                if n not in (j, k):
                     s[n] = 0
-            pl.subplot(3,1,i)
+            pl.subplot(3, 1, i)
             i += 1
             t = y[s]
             if j > k:
@@ -1432,10 +1431,10 @@ def main():
                     off = -0.9 * z[ii]
                 off = 0
                 pl.plot(x+off, tt)
-            t = correlate(t[:,1:],t[:,:1],'same')
+            t = correlate(t[:, 1:], t[:, :1], 'same')
             m = t.argmax(axis=0)
             #pl.plot(np.diff(m))
-            idx = (m, range(len(m)))
+            idx = (m, list(range(len(m))))
             #pl.plot(x[m], t[idx])
             pl.title("%d, %d" % (j, k))
             pl.grid()

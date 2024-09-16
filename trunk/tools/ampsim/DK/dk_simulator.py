@@ -1,4 +1,4 @@
-from __future__ import division
+
 import numpy as np
 import numpy.matlib as ml
 import numpy.linalg as la
@@ -10,15 +10,16 @@ import ctypes as ct
 import slicot
 import mpmath
 import collections, warnings, tempfile, os, operator, sys, shutil, time
-import commands, subprocess, math, re, logging
+import subprocess, subprocess, math, re, logging
 
 import dk_templates, generate_code
 from models import GND, Out, Node
 from dk_lib import printoptions
+from functools import reduce
 
 def pkgconfig(*packages, **kw):
     flag_map = {'-I': 'include_dirs', '-L': 'library_dirs', '-l': 'libraries'}
-    for token in commands.getoutput("pkg-config --libs --cflags %s" % ' '.join(packages)).split():
+    for token in subprocess.getoutput("pkg-config --libs --cflags %s" % ' '.join(packages)).split():
         kw.setdefault(flag_map.get(token[:2]), []).append(token[2:])
     return kw
 
@@ -77,12 +78,12 @@ class CodeWrapper(object):
         if d["method"] in ("hybr", "lm"):
             packages.append('cminpack')
         dct = pkgconfig(*packages)
-        libs = dct.get("libraries",[])
+        libs = dct.get("libraries", [])
         libs.append("m")
         if d["resample"]:
             libs.append("zita-resampler")
         self.script_dict = dict(
-            includes = " ".join("-I%s" % v for v in dct.get("include_dirs",[])),
+            includes = " ".join("-I%s" % v for v in dct.get("include_dirs", [])),
             libraries = " ".join("-l%s" % v for v in set(libs)),
             #defines = "-DCHECK_BOUNDS",
             defines = "",
@@ -116,12 +117,12 @@ class CodeWrapper(object):
 
     def _prepare_files(self):
         with open(self.build_script, 'w') as f:
-            print >> f, dk_templates.build_script_template.render(self.script_dict)
+            print(dk_templates.build_script_template.render(self.script_dict), file=f)
             os.fchmod(f.fileno(), 0o777)
         
 
     def _generate_code(self):
-        for fname, content in self.code.items():
+        for fname, content in list(self.code.items()):
             if fname == "c_source":
                 fname = self.script_dict['sourcename']
             with open(fname, 'w') as f:
@@ -227,10 +228,10 @@ class LinearFilter(object):
 
     def convert_variable_dict(self, subst_var):
         d = self.subst_var_default.copy()
-        df = set(subst_var.keys()) - set([str(v) for v in d.keys()])
+        df = set(subst_var.keys()) - {str(v) for v in list(d.keys())}
         if df:
             raise ValueError("unknown variable(s): %s" % ", ".join(df))
-        d.update(dict([(sp.symbols(k), v) for k, v in subst_var.items()]))
+        d.update(dict([(sp.symbols(k), v) for k, v in list(subst_var.items())]))
         return d
 
     def get_z_coeffs(self, samplerate=None, subst_var=None, as_expr=True):
@@ -269,7 +270,7 @@ class LinearFilter(object):
                 # factorize according to variable symbols
                 x = sp.poly(e.expand(), syms)
                 if not as_expr:
-                    l.append(zip(x.monoms(), x.coeffs()))
+                    l.append(list(zip(x.monoms(), x.coeffs())))
                 else:
                     ss = 0
                     for co, o in zip(x.coeffs(), x.monoms()):
@@ -295,7 +296,7 @@ class LinearFilter(object):
         return l
 
     def print_coeffs(self, prefix, coeffs, f=sys.stdout):
-        print >>f, "\n\n".join(self.coeffs_as_faust_code(prefix, coeffs))
+        print("\n\n".join(self.coeffs_as_faust_code(prefix, coeffs)), file=f)
 
     def spectrum(self, b, a, start_freq=20, stop_freq=10000, fs=48000, nbins=8*1024):
         b = [float(x) for x in b]
@@ -309,7 +310,7 @@ class LinearFilter(object):
     def solve(self, S, in_mat, out_mat):
         v = sp.Matrix(sp.symbols("v:%d" % self.S.shape[0]))
         try:
-            p = subprocess.Popen(("maxima","-b","/dev/fd/0","--very-quiet","2>&1 >/dev/null"),shell=True,
+            p = subprocess.Popen(("maxima", "-b", "/dev/fd/0", "--very-quiet", "2>&1 >/dev/null"), shell=True,
                                  stdin=subprocess.PIPE, stdout=subprocess.PIPE,
                                  stderr=subprocess.PIPE)
         except OSError as e:
@@ -322,19 +323,19 @@ class LinearFilter(object):
                 np.array(out_mat).nonzero()[1]+1,
                 ))
         def maxima_error(s):
-            print out
-            print "----"
-            print "Truncated output: " + expr[:100] + "..."
+            print(out)
+            print("----")
+            print("Truncated output: " + expr[:100] + "...")
             raise ValueError(s)
         syms = set()
         for i in S:
             syms |= i.atoms(sp.Symbol)
-        e = expr.split("=",1)
+        e = expr.split("=", 1)
         if len(e) != 2:
             maxima_error("unexpected output from maxima")
-        e = e[1].rstrip(";\n").replace("^","**")
+        e = e[1].rstrip(";\n").replace("^", "**")
         try:
-            return eval(e, dict([(str(sym),sym) for sym in syms]))
+            return eval(e, dict([(str(sym), sym) for sym in syms]))
         except Exception as ex:
             maxima_error("can't eval maxima output [%s]" % ex)
 
@@ -388,20 +389,20 @@ class NonlinEquations(object):
         "return a Permutation and an instance of NonlinEquations or derived"
         Pn = np.arange(len(CZ))
         # permute nonlinear part to make left upper submatrix of K blockdiagonal
-        p, blocklist = NonlinEquations.get_block_indices(K[v_slice][:,v_slice], CZ[v_slice])
+        p, blocklist = NonlinEquations.get_block_indices(K[v_slice][:, v_slice], CZ[v_slice])
         if len(blocklist) > 1:
             Pn[v_slice] = p
-            K = K[Pn][:,Pn]
+            K = K[Pn][:, Pn]
             CZ = CZ[Pn]
         if opts.partition and len(blocklist) > 1:
             nlin = PartitionedNonlinEquations(eq, v_slice)
             Pn = Pn[nlin.create(eq, K, CZ, blocklist, opts)]
             return Pn, nlin
         # permute the system if there is more than one strongly connected component
-        p, blocklist = NonlinEquations.find_scc(K[v_slice][:,v_slice], eq.get_parser())
+        p, blocklist = NonlinEquations.find_scc(K[v_slice][:, v_slice], eq.get_parser())
         if opts.chain and len(blocklist) > 1:
             Pn[v_slice] = p
-            K = K[Pn][:,Pn]
+            K = K[Pn][:, Pn]
             CZ = CZ[Pn]
             nlin = ChainedNonlinEquations(eq, v_slice)
             Pn = Pn[nlin.create(eq, K, CZ, blocklist, opts)]
@@ -476,11 +477,11 @@ class NonlinEquations(object):
         n = np.count_nonzero(CZ)
         if n != nz:
             pc = np.argsort(CZ == 0)
-            K = K[pc][:,pc][:n,:n]
+            K = K[pc][:, pc][:n, :n]
         p, bl = NonlinEquations.get_blockdiag_permutation(K)
         if n != nz:
-            p = np.array(pc)[p+range(n, nz)]
-        return p, [slice(i,j) for i, j in zip(bl[:-1], bl[1:])]
+            p = np.array(pc)[p+list(range(n, nz))]
+        return p, [slice(i, j) for i, j in zip(bl[:-1], bl[1:])]
 
     @staticmethod
     def decompose(a):
@@ -504,7 +505,7 @@ class NonlinEquations(object):
         V = np.zeros(n)
         L = [[] for i in range(n)]
         for i, l in enumerate(L):
-            col = K[:,label==i]
+            col = K[:, label==i]
             for j in range(n):
                 if i != j and col[label==j].any():
                     l.append(j)
@@ -538,7 +539,7 @@ class NonlinEquations(object):
         nni = np.count_nonzero(SV)
         if nni == self.nn:
             return matrix_list
-        U = U[:,:nni]
+        U = U[:, :nni]
         UH = U.H
         self.U = U
         self.nni = nni
@@ -558,13 +559,13 @@ class NonlinEquations(object):
             self.nno = n
             self.Mi = (np.diag(SV) * V)[:n]
             s = np.cumsum([0]+[m.shape[0] for m in matrix_list])
-            matrix_list = [U[slice(*sl),:n] for sl in zip(s[:-1],s[1:])]
+            matrix_list = [U[slice(*sl), :n] for sl in zip(s[:-1], s[1:])]
         elif self.eq.nx + self.eq.no < self.nn:
             self.nno = self.eq.nx + self.eq.no
             self.Mi = M
             M = np.eye(self.nno, self.nno)
             s = np.cumsum([0]+[m.shape[0] for m in matrix_list])
-            matrix_list = [M[slice(*sl)] for sl in zip(s[:-1],s[1:])]
+            matrix_list = [M[slice(*sl)] for sl in zip(s[:-1], s[1:])]
         self.i_slice = slice(self.i_slice.start, self.i_slice.start+self.nno)
         return matrix_list
 
@@ -610,15 +611,15 @@ class ChainedNonlinEquations(NonlinEquations):
         l_F = []
         l_C = []
         if i:
-            l_F.append(F[:,0:i])
-            l_C.append(C[:,0:i])
+            l_F.append(F[:, 0:i])
+            l_C.append(C[:, 0:i])
         for bl in self.subblocks:
-            Fs, Cs = bl.make_output_trans((F[:,bl.i_slice], C[:,bl.i_slice]), opts)
+            Fs, Cs = bl.make_output_trans((F[:, bl.i_slice], C[:, bl.i_slice]), opts)
             l_F.append(Fs)
             l_C.append(Cs)
         if j < F.shape[0]:
-            l_F.append(F[:,j:])
-            l_C.append(C[:,j:])
+            l_F.append(F[:, j:])
+            l_C.append(C[:, j:])
         return np.concatenate(l_F, axis=1), np.concatenate(l_C, axis=1)
 
 
@@ -643,7 +644,7 @@ class PartitionedNonlinEquations(NonlinEquations):
 
     def make_input_trans(self, matrix_list, opts):
         if opts.svd_prec < 0:
-            Ku = [self.eq.K[bl.p_slice,self.cc_slice] for bl in self.subblocks]
+            Ku = [self.eq.K[bl.p_slice, self.cc_slice] for bl in self.subblocks]
             self.Ku = np.concatenate(Ku, axis=0)
             return matrix_list
         l = []
@@ -651,7 +652,7 @@ class PartitionedNonlinEquations(NonlinEquations):
         Ku = []
         for bl in self.subblocks:
             mlist = [m[bl.p_slice] for m in matrix_list]
-            mlist.append(self.eq.K[bl.p_slice,self.cc_slice])
+            mlist.append(self.eq.K[bl.p_slice, self.cc_slice])
             bl.Hc = self.Hc[bl.p_slice]
             mlist = bl.make_input_trans(mlist, opts)
             bl.p_slice = slice(j, bl.p_slice.stop - (bl.p_slice.start - j))
@@ -670,7 +671,7 @@ class PartitionedNonlinEquations(NonlinEquations):
         self.U = ml.eye(n_old, self.nni, self.nni-n_old)
         j = 0
         for bl in self.subblocks:
-            self.U[j:j+bl.U.shape[0],bl.p_slice] = bl.U
+            self.U[j:j+bl.U.shape[0], bl.p_slice] = bl.U
             j += bl.U.shape[0]
         return [np.concatenate(m, axis=0) for m in zip(*l)]
 
@@ -684,7 +685,7 @@ class PartitionedNonlinEquations(NonlinEquations):
         j = 0
         Kl = []
         for bl in self.subblocks:
-            mlist = [m[:,bl.i_slice] for m in matrix_list]
+            mlist = [m[:, bl.i_slice] for m in matrix_list]
             mlist.append(self.eq.K[self.cc_slice, bl.i_slice])
             mlist = bl.make_output_trans(mlist, opts)
             bl.i_slice = slice(j, bl.i_slice.stop - (bl.i_slice.start - j))
@@ -693,7 +694,7 @@ class PartitionedNonlinEquations(NonlinEquations):
             Kl.append(mlist[-1])
         Kl.append(self.eq.K[self.cc_slice, self.cc_slice])
         self.Kl = np.concatenate(Kl, axis=1)
-        l.append([m[:,self.cc_slice] for m in matrix_list])
+        l.append([m[:, self.cc_slice] for m in matrix_list])
         n_old = self.i_slice.stop - self.i_slice.start
         cc = self.cc_slice.stop - self.cc_slice.start
         self.i_slice = slice(self.i_slice.start, j+cc)
@@ -713,14 +714,14 @@ class PartitionedNonlinEquations(NonlinEquations):
         for bl in self.subblocks:
             sl = bl.v_slice
             U, V, Vi = self.decompose(self.eq.K[end:, sl])
-            m = ml.zeros_like(self.Kl[:,sl])
-            m[:,:U.shape[1]] = U
-            self.Kl[:,sl] = m
+            m = ml.zeros_like(self.Kl[:, sl])
+            m[:, :U.shape[1]] = U
+            self.Kl[:, sl] = m
             #self.Mi[sl,sl] = V
             bl.Mi = V
-            m = ml.zeros_like(Kni[sl,sl])
-            m[:,:Vi.shape[1]] = Vi
-            Kni[sl,sl] = m
+            m = ml.zeros_like(Kni[sl, sl])
+            m[:, :Vi.shape[1]] = Vi
+            Kni[sl, sl] = m
         return F * Kni, C * Kni
 
 
@@ -732,17 +733,17 @@ class EquationSystem(object):
         if opts is None:
             opts = TransformOptions()
 
-        self.nx, self.nn, self.ni, self.no, self.np = [len(parser.element_name[j]) for j in 'X', 'N', 'I', 'O', 'P']
+        self.nx, self.nn, self.ni, self.no, self.np = [len(parser.element_name[j]) for j in ('X', 'N', 'I', 'O', 'P')]
         self.nlin_elements = np.array(parser.element_name["N"])
         self.Nxl, self.Nxr, self.Nnl, self.Nnr, self.No, self.Nv, self.I = [
-            parser.N[j] for j in "Xl", "Xr", "Nl", "Nr", "O", "P", "I"]
+            parser.N[j] for j in ("Xl", "Xr", "Nl", "Nr", "O", "P", "I")]
         self.CV = parser.ConstVoltages
         m = parser.mm
         self.f = parser.get_nonlin_funcs()
         self.CZ = parser.CZ
         if self.jacobi_par is not None:
             J, Jc, select, unselect = self.jacobi_par
-            self.S = parser.S - self.Nnr[unselect].T * J[unselect][:,unselect] * self.Nnl[unselect]
+            self.S = parser.S - self.Nnr[unselect].T * J[unselect][:, unselect] * self.Nnl[unselect]
             self.CV = self.CV + (self.Nnr[unselect].T * Jc[unselect]).T
             self.Nnr = self.Nnr[select]
             self.Nnl = self.Nnl[select]
@@ -861,7 +862,7 @@ class Simulate(object):
         self.parser = eq.get_parser()
         if solver is None:
             self.solver_dict = dict()
-        elif isinstance(solver, basestring):
+        elif isinstance(solver, str):
             self.solver_dict = dict(method = solver)
         else:
             self.solver_dict = dict(solver)
@@ -1075,7 +1076,7 @@ class SimulatePy(Simulate):
             sm = self.solver_method
         if sd is None:
             sd = self.solver_dict
-        i = ml.zeros((p.shape[0],1))
+        i = ml.zeros((p.shape[0], 1))
         vv = self.v0.copy()
         def func(v):
             for n, (f, base) in enumerate(self.ff[s]):
@@ -1095,17 +1096,17 @@ class SimulatePy(Simulate):
             #sd = [dict(), dict(diag=(1e3,1),factor=1e-1), dict()]
             #sm = ["lm", "lm", "lm"]
             #sd = [dict(diag=(1e3,1),factor=1e-1), dict(diag=(1e3,1),factor=1e-1), dict(diag=(1e3,1),factor=1e-1)]
-            sm = [None,None,None]
-            sd = [None,None,None]
+            sm = [None, None, None]
+            sd = [None, None, None]
             def func(icc, fact):
                 #print "*", fact, icc
                 p1 = self.last_p + (p - self.last_p) * fact
                 for j, s in enumerate(self.eq.blocklist):
                     k = K[s]
                     try:
-                        i[s] = self.eq.Kn[j] * self.solve_one(p1[s]+k[:,rc].dot(icc).T, k[:,s], s, sm[j], sd[j])
+                        i[s] = self.eq.Kn[j] * self.solve_one(p1[s]+k[:, rc].dot(icc).T, k[:, s], s, sm[j], sd[j])
                     except ConvergenceError as e:
-                        print "conv error in %d: %s" % (j, e)
+                        print("conv error in %d: %s" % (j, e))
                         raise
                         #raise SystemExit
                 i[rc] = icc.reshape(len(icc), 1)
@@ -1115,8 +1116,8 @@ class SimulatePy(Simulate):
             for j, s in enumerate(self.eq.nonlin.blocklist):
                 pp = p[s]
                 if s.start:
-                    pp += K[s][:,:s.start] * i[:s.start]
-                i[s] = self.solve_one(pp, K[s][:,s], s)
+                    pp += K[s][:, :s.start] * i[:s.start]
+                i[s] = self.solve_one(pp, K[s][:, s], s)
             i = self.eq.nonlin.Mi * i
         else:
             def func(v, fact):
@@ -1141,7 +1142,7 @@ class SimulatePy(Simulate):
         for n, (f, vl, base) in enumerate(self.eq.f):
             for k, var in zip(base, vl):
                 if k == j:
-                    s = dict([(sym,val) for sym, val in zip(vl, v[base])])
+                    s = dict([(sym, val) for sym, val in zip(vl, v[base])])
                     i[n] = f.diff(var).subs(s)
                     break
             else:
@@ -1186,11 +1187,11 @@ class SimulatePy(Simulate):
             else:
                 try:
                     p = G * self.x + H * u
-                    self.minmax[:,0] = np.min((self.minmax[:,0], np.ravel(p)), axis=0)
-                    self.minmax[:,1] = np.max((self.minmax[:,1], np.ravel(p)), axis=0)
+                    self.minmax[:, 0] = np.min((self.minmax[:, 0], np.ravel(p)), axis=0)
+                    self.minmax[:, 1] = np.max((self.minmax[:, 1], np.ravel(p)), axis=0)
                     i = self.nonlin_py(p, K, Hc)
                 except ConvergenceError as e:
-                    print "##", n
+                    print("##", n)
                     raise
             y[n,:] = matrix_add(D * self.x, E * u, Ec, F * i).A1
             self.x = matrix_add(A * self.x, B * u, Bc, C * i)
@@ -1333,7 +1334,7 @@ class BuildCModule(Simulate):
         d["method"] = method = "linear" if eq.nn == 0 else self.solver_method
         pot_list = self.eq.get_parser().pot_list
         d["pot_vars"] = ",".join(['"%s"' % v for v in pot_list])
-        d["pot"] = ",".join([str(self.pot.get(v,0.5)) for v in pot_list])
+        d["pot"] = ",".join([str(self.pot.get(v, 0.5)) for v in pot_list])
         d["pre_filter"] = self.pre_filter or ""
         d["post_filter"] = self.post_filter or ""
         d["post_process"] = ""
@@ -1379,7 +1380,7 @@ class SimulateC(object):
     def eval_c(self, v_in, ii=-1):
         v_in = np.array(v_in)
         if v_in.ndim == 1:
-            v_in = v_in.reshape((len(v_in),1))
+            v_in = v_in.reshape((len(v_in), 1))
         assert v_in.shape[1] == self.ni
         y = np.empty((v_in.shape[0], self.no))
         x = self.x
@@ -1444,7 +1445,7 @@ class SimulateC(object):
         if end != -1:
             raise SystemExit("%s: bad sequence length in get_structure")
         self.nx, self.ni, self.no, self.npl, self.nn, self.nni, self.nno = nx, ni, no, npl, nn, nni, nno
-        self.comp_sz = comp_sz = np.array([[slice(tc[6*i+2*j],tc[6*i+2*j+1]) for j in range(3)] for i in range(nc)])
+        self.comp_sz = comp_sz = np.array([[slice(tc[6*i+2*j], tc[6*i+2*j+1]) for j in range(3)] for i in range(nc)])
         self.pins = np.array([pins[i] for i in range(nn)])
         self.comp_names = [cnm[2*i] for i in range(nc)]
         self.comp_namespace = [cnm[2*i+1] for i in range(nc)]
@@ -1478,13 +1479,13 @@ class SimulateC(object):
         c_real_p = ct.POINTER(c_real)
         c_calc = lib.calc
         c_calc.restype = ct.c_int
-        c_calc.argtypes = [c_arr(ni), c_arr(nx), c_arr(nn,True), c_arr(nx,True), c_arr(no,True), c_int_p, c_int_p, c_real_p]
+        c_calc.argtypes = [c_arr(ni), c_arr(nx), c_arr(nn, True), c_arr(nx, True), c_arr(no, True), c_int_p, c_int_p, c_real_p]
         c_set_state = lib.set_state
         c_set_state.restype = None
         c_set_state.argtypes = [c_arr(nn), c_arr(nx)]
         c_get_info = lib.get_info
         c_get_info.restype = None
-        c_get_info.argtypes = [c_arr(nn,True), c_arr(nx, True), c_arr(nni,True), c_arr(nni,True), c_int_p, c_int_p, c_real_p]
+        c_get_info.argtypes = [c_arr(nn, True), c_arr(nx, True), c_arr(nni, True), c_arr(nni, True), c_int_p, c_int_p, c_real_p]
         c_calc_stream = lib.calc_stream
         c_calc_stream.restype = ct.c_int
         c_calc_stream.argtypes = [c_mat(), c_mat(True), ct.c_int]
@@ -1604,9 +1605,9 @@ class Parser(object):
         self.element_name = collections.defaultdict(list)
         tc = self.collect(S, V)
         n = len(self.nodes) + tc["V"]
-        self.S = ml.zeros((n,n))
+        self.S = ml.zeros((n, n))
         self.N = dict([(t, ml.zeros((tc[t[0]], n)))
-                       for t in "R","Xl","Xr","Nl","Nr","I","O","P"])
+                       for t in ("R", "Xl", "Xr", "Nl", "Nr", "I", "O", "P")])
         self.Pv = np.zeros(tc["P"])
         self.pot_func = np.array((None,)*tc["P"])
         self.ConstVoltages = ml.zeros(n)
@@ -1616,12 +1617,12 @@ class Parser(object):
         if self.create_filter or self.symbolic:
             alpha = sp.symbols("s")
             self.S = sp.Matrix(self.S)
-            for k in self.N.keys():
+            for k in list(self.N.keys()):
                 self.N[k] = sp.Matrix(self.N[k])
             if self.symbolic:
                 self.Pv = sp.Matrix(self.Pv)
                 d = {}
-                for k, v in V.items():
+                for k, v in list(V.items()):
                     if isinstance(k, Node):
                         sym = sp.Symbol(str(k))
                         if isinstance(v, dict):
@@ -1642,7 +1643,7 @@ class Parser(object):
         for row in S:
             row[0].process(self, [map_conn(c) for c in row[1:]], V.get(row[0]), alpha)
         self.pot = V.get("POT", {})
-        self.op = V.get("OP",[0.]*tc["I"])
+        self.op = V.get("OP", [0.]*tc["I"])
         self.pot_list = []
         for a, f in self.pot_func:
             s = str(a)
@@ -1660,14 +1661,14 @@ class Parser(object):
 
     def set_function(self, idx, expr, vl, base):
         assert self.f[idx] is None
-        self.f[idx] = (expr, vl, range(base, base+len(vl)))
+        self.f[idx] = (expr, vl, list(range(base, base+len(vl))))
 
     def get_pot_funcs(self):
         return self.pot_func
 
     def get_pot_attr(self):
         attrlist = []
-        for e in set([e[0] for e in self.element_name["P"]]):
+        for e in {e[0] for e in self.element_name["P"]}:
             t = self.V[e]
             if not isinstance(t, dict):
                 t = dict(value=t)
@@ -1701,7 +1702,7 @@ class Parser(object):
         try:
             return len(self.nodes) + self.element_name["V"].index(tpl)
         except ValueError:
-            print "%s not in %s" % (tpl, self.element_name["V"])
+            print("%s not in %s" % (tpl, self.element_name["V"]))
             raise
 
     def collect(self, S, V):
@@ -1715,7 +1716,7 @@ class Parser(object):
                 if s not in self.nodes:
                     if s != GND and s is not None and not isinstance(s, Out):
                         self.nodes[s] = len(self.nodes)
-                        l.append((s,None))
+                        l.append((s, None))
         return tc
 
     def new_row(self, N, sym, f=None):
@@ -1723,7 +1724,7 @@ class Parser(object):
         n = len(l)
         if N == "V":
             n += len(self.nodes)
-        l.append((sym,f))
+        l.append((sym, f))
         return n
 
     def current_row(self, N):
@@ -1748,12 +1749,12 @@ class Parser(object):
     def add_S(self, idx, conn, value):
         for i in conn[0], conn[1]:
             if i != -1:
-                self.S[idx,i] += value
+                self.S[idx, i] += value
             value = -value
         for i in conn[0], conn[1]:
             value = -value
             if i != -1:
-                self.S[i,idx] += value
+                self.S[i, idx] += value
 
     def add_conn(self, N, node, conn, val):
         if conn != -1:
@@ -1782,7 +1783,7 @@ class Parser(object):
             return sp.symbols(['%s[%d]' % (s, i) for i in range(len(self.element_name[n]))])
         def ccode(d, ret, ex):
             r = ret + '[%d]'
-            d[ret] = "\n".join([sp.ccode(ee, r % i) for i, ee in enumerate(ex)]).replace("\n","\n    ")
+            d[ret] = "\n".join([sp.ccode(ee, r % i) for i, ee in enumerate(ex)]).replace("\n", "\n    ")
         def ccodesum(d, ret, l):
             l2 = [m for m in l if m]
             if l2:
@@ -1824,7 +1825,7 @@ def get_executor(name, parser, solver=None, pure_python=True, c_tempdir=None, c_
         return get_py_executor(parser, solver, linearize)
     elif c_debug_load:
         sim = SimulateC(c_debug_load)
-        print "%s/%s: %s[%d], %s, %s" % (sim.name, sim.comment, sim.method, sim.data_size, sim.out_labels, sim.pot_list)
+        print("%s/%s: %s[%d], %s, %s" % (sim.name, sim.comment, sim.method, sim.data_size, sim.out_labels, sim.pot_list))
         return sim
     else:
         sim = SimulatePy(EquationSystem(parser), solver)

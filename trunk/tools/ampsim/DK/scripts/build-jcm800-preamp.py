@@ -36,7 +36,7 @@ class Filter(object):
             }
         self.c.set_netlist(S, V)
         self.c._ensure_filter(symbolic=False)
-        self.c.sim_filter.subst_var_default = dict(R1=1e4,R5=470e3,C4=470e-12,C5=1e-9,P6v=0.5)
+        self.c.sim_filter.subst_var_default = dict(R1=1e4, R5=470e3, C4=470e-12, C5=1e-9, P6v=0.5)
         b, a = self.c.sim_filter.get_z_coeffs(samplerate=self.fs)
         args = (R1, R5, C4, C5, P6v)
         self.b = [sp.lambdify(args, v) for v in b]
@@ -48,7 +48,7 @@ class Filter(object):
         for i, v in enumerate(b[0]+a[0]):
             s = set()
             for j, p in v:
-                p = p.subs(dict(R1=R1,R5=R5,C4=C4,C5=C5))
+                p = p.subs(dict(R1=R1, R5=R5, C4=C4, C5=C5))
                 p = re.sub(r'([a-zA-Z0-9]+)\*\*(\d+)', r'pow(\1,\2)', str(p))
                 j = j[0]
                 l.append('    self.K%d(%d) = %s;' % (j, i, p))
@@ -66,7 +66,7 @@ class CompareFilter(object):
         self.c.set_netlist(circ.Preamp_test.S, circ.Preamp_test.V)
         self.c.linearize()
         self.sr = self.sig(self.sig.sweep(), timespan=1)
-        self.fr = (50,20000)
+        self.fr = (50, 20000)
         self.f = numpy.logspace(numpy.log10(self.fr[0]), numpy.log10(self.fr[1]), 200)
         self.flt = Filter(self.c.FS)
         self.rg = np.logspace(0, -3, 6)
@@ -91,7 +91,7 @@ class CompareFilter(object):
         params = []
         for i, p in enumerate(rg):
             self.c.set_pot_variable('P6v', p)
-            self.c.sim_c(numpy.zeros((self.c.FS,1)))
+            self.c.sim_c(numpy.zeros((self.c.FS, 1)))
             self.c.stream(self.sr)
             h = self.c.last_signal.get_spectrum(
                 self.c.last_output, 2 * numpy.pi * self.f / self.c.FS)
@@ -102,7 +102,7 @@ class CompareFilter(object):
     def plotcurves(self, param):
         for i, p in enumerate(self.rg):
             self.c.set_pot_variable('P6v', p)
-            self.c.sim_c(numpy.zeros((self.c.FS,1)))
+            self.c.sim_c(numpy.zeros((self.c.FS, 1)))
             lb = "%.1g" % p
             self.c.stream(self.sr)
             h = self.c.last_signal.get_spectrum(
@@ -120,21 +120,21 @@ class CompareFilter(object):
 def calc_shape_transform(fnum, resnum, minmax, c):
     p0 = c.sim_py.p0.A1
     argstart = fnum*2
-    if minmax[argstart+1,0] == minmax[argstart+1,1]:
-        return numpy.array([[0.,0.,0.],[0.,0.,0.],[1.,0.,1.]])
-    x = numpy.linspace(minmax[argstart,0], minmax[argstart,1], 200)
+    if minmax[argstart+1, 0] == minmax[argstart+1, 1]:
+        return numpy.array([[0., 0., 0.], [0., 0., 0.], [1., 0., 1.]])
+    x = numpy.linspace(minmax[argstart, 0], minmax[argstart, 1], 200)
     p1 = float(p0[argstart+1])
-    ap2 = numpy.linspace(minmax[argstart+1,0], minmax[argstart+1,1], 5)
-    m0 = [1,0,1]
+    ap2 = numpy.linspace(minmax[argstart+1, 0], minmax[argstart+1, 1], 5)
+    m0 = [1, 0, 1]
     r = numpy.zeros((len(ap2), 3))
-    a = numpy.zeros((len(x),2))
+    a = numpy.zeros((len(x), 2))
     def f(x, p):
-        a[:,0] = x
-        a[:,1] = p
+        a[:, 0] = x
+        a[:, 1] = p
         return c.sim_c.c_calc_comp[fnum](a)
     for i, p2 in enumerate(ap2):
         def func(m):
-            return numpy.sum(((m[0]*f(m[1]+m[2]*x,p1)) - f(x, p2)) ** 2)
+            return numpy.sum(((m[0]*f(m[1]+m[2]*x, p1)) - f(x, p2)) ** 2)
         meth = "Powell"
         res = minimize(func, m0, method=meth)
         r[i] = res.x
@@ -149,8 +149,8 @@ def shape_transform_matrices(c):
     l = []
     for i in range(o.shape[2]):
         for j in range(3):
-            sn = "S%sm%d" % (['p','s','a'][j], i)
-            l.append(MatrixDefinition(sn, array=True, value=o[:,j,i]))
+            sn = "S%sm%d" % (['p', 's', 'a'][j], i)
+            l.append(MatrixDefinition(sn, array=True, value=o[:, j, i]))
     return l
 
 class CodeGenerator(generate_code.CodeGenerator):
@@ -165,7 +165,7 @@ class CodeGenerator(generate_code.CodeGenerator):
         l.extend(fl.get_coeffs(*params[0]))
         d.overwrite("filter_init", "\n   ".join(l))
         fields = ["Array<double, %d, 1> %s;" % r for r in
-                  ((6,"K0"),(6,"K1"),(6,"K2"),(6,"K3"),(6,"K4"),(6,"K5"),(6,"Y"),(6,"X"))]
+                  ((6, "K0"), (6, "K1"), (6, "K2"), (6, "K3"), (6, "K4"), (6, "K5"), (6, "Y"), (6, "X"))]
         d.overwrite("DKPlugin_fields", "\n    ".join(fields))
         d.overwrite("add_npl", 1)
         d.overwrite("DKPlugin_init", ", K0(), K1(), K2(), K3(), K4(), K5(), Y(), X()")
@@ -263,7 +263,7 @@ if 1:
         dict(method="hybr", factor=1e-2, max_homotopy_iter=10),
         dict(method="hybr", factor=1e-1, max_homotopy_iter=10),
         ]
-    c.basegrid = 6 * [ [[None, ('pp',4)], [None, None]], ]  # with shape transform
+    c.basegrid = 6 * [ [[None, ('pp', 4)], [None, None]], ]  # with shape transform
     c.stream(sig(0.0, samples=500))
     c.calc_range(sr)
     class CE(object):

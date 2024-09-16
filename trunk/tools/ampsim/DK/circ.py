@@ -1,5 +1,5 @@
 # -*- coding: utf-8 -*-
-from __future__ import division
+
 
 import math
 import pylab as pl
@@ -10,54 +10,54 @@ from numpy.fft import fftfreq
 
 
 Tubes = {
-    "12ax7" : dict(mu = 100.0, Ex = 1.4, Kp = 600.0, Kvb = 300.0, Kg1 = 1060.0, Gco = -0.2, Gcf = 1e-5),
+    "12ax7": dict(mu = 100.0, Ex = 1.4, Kp = 600.0, Kvb = 300.0, Kg1 = 1060.0, Gco = -0.2, Gcf = 1e-5),
     "12ax7a": dict(mu = 100.3, Ex = 1.5, Kp = 1795.7, Kvb = 524.4, Kg1 = 1651.8, Gco = -0.2, Gcf = 1e-5),
-    "12au7" : dict(mu = 21.5, Ex = 1.3, Kp = 84.0, Kvb = 300.0, Kg1 = 1180.0, Gco = 0, Gcf = 12e-5),
+    "12au7": dict(mu = 21.5, Ex = 1.3, Kp = 84.0, Kvb = 300.0, Kg1 = 1180.0, Gco = 0, Gcf = 12e-5),
     "12au7a": dict(mu = 19.41, Ex = 1.226, Kp = 104.87, Kvb = 300.0, Kg1 = 1233.8, Gco = 0, Gcf = 9e-5),
-    "12at7" : dict(mu = 60.0, Ex = 1.35, Kp = 300.0, Kvb = 300.0, Kg1 = 460.0, Gco = -0.5, Gcf = 12e-5),
-    "12ay7" : dict(mu = 44.16, Ex = 1.11, Kp = 409.96, Kvb = 300.0, Kg1 = 1192.4, Gco = -0.5, Gcf = 12e-5),
-    "JJECC83S" : dict(mu =  98.3, Ex = 1.45, Kp = 749.4, Kvb = 131.2, Kg1 = 1722.8, Gco = -0.2, Gcf = 1e-5 ),
-    "7025"  : dict(mu = 102.5, Ex = 1.41, Kp = 813.8, Kvb = 44.9, Kg1 = 1598.8, Gco = -0.2, Gcf = 1e-5),
-    "EL34"  : dict(mu = 12.3, Ex = 1.17, Kp = 61.1, Kvb = 29.9, Kg1 = 353.9, Kg2 = 4500.0, Gco = -0.2, Gcf = 1e-5),
-    "EL84"  : dict(mu = 21.3, Ex = 1.24, Kp = 111.1, Kvb = 17.9, Kg1 = 401.7, Kg2 = 4500.0, Gco = -0.2, Gcf = 1e-5),
-    "EF86"  : dict(mu = 34.9, Ex = 1.35, Kp = 222.06, Kvb = 4.7, Kg1 = 2648.1, Kg2 = 4627, Gco = -0.2, Gcf = 1e-5),
-    "6L6"   : dict(mu = 8.7, Ex = 1.35, Kp = 48.0, Kvb = 12.0, Kg1 = 1460.0, Kg2 = 4500.0, Gco = -0.2, Gcf = 1e-5),
-    "6L6CG" : dict(mu = 8.7, Ex = 1.35, Kp = 48.0, Kvb = 12.0, Kg1 = 1460.0, Kg2 = 4500.0, Gco = -0.2, Gcf = 1e-5),
-    "6V6"   : dict(mu = 10.7, Ex = 1.31, Kp = 41.16, Kvb = 12.7, Kg1 = 1672.0, Kg2 = 4500.0, Gco = -0.2, Gcf = 1e-5),
-    "6V6GT" : dict(mu = 12.67, Ex = 1.198, Kp = 38.07, Kvb = 30.2, Kg1 = 915.0, Kg2 = 4500.0, Gco = 0.0, Gcf = 12e-5),
-    "6AU6"  : dict(mu = 36.65, Ex = 1.376, Kp = 215.42, Kvb = 15.0, Kg1 = 1129.4, Kg2 = 1059, Gco = -0.2, Gcf = 1e-5),
+    "12at7": dict(mu = 60.0, Ex = 1.35, Kp = 300.0, Kvb = 300.0, Kg1 = 460.0, Gco = -0.5, Gcf = 12e-5),
+    "12ay7": dict(mu = 44.16, Ex = 1.11, Kp = 409.96, Kvb = 300.0, Kg1 = 1192.4, Gco = -0.5, Gcf = 12e-5),
+    "JJECC83S": dict(mu =  98.3, Ex = 1.45, Kp = 749.4, Kvb = 131.2, Kg1 = 1722.8, Gco = -0.2, Gcf = 1e-5 ),
+    "7025": dict(mu = 102.5, Ex = 1.41, Kp = 813.8, Kvb = 44.9, Kg1 = 1598.8, Gco = -0.2, Gcf = 1e-5),
+    "EL34": dict(mu = 12.3, Ex = 1.17, Kp = 61.1, Kvb = 29.9, Kg1 = 353.9, Kg2 = 4500.0, Gco = -0.2, Gcf = 1e-5),
+    "EL84": dict(mu = 21.3, Ex = 1.24, Kp = 111.1, Kvb = 17.9, Kg1 = 401.7, Kg2 = 4500.0, Gco = -0.2, Gcf = 1e-5),
+    "EF86": dict(mu = 34.9, Ex = 1.35, Kp = 222.06, Kvb = 4.7, Kg1 = 2648.1, Kg2 = 4627, Gco = -0.2, Gcf = 1e-5),
+    "6L6": dict(mu = 8.7, Ex = 1.35, Kp = 48.0, Kvb = 12.0, Kg1 = 1460.0, Kg2 = 4500.0, Gco = -0.2, Gcf = 1e-5),
+    "6L6CG": dict(mu = 8.7, Ex = 1.35, Kp = 48.0, Kvb = 12.0, Kg1 = 1460.0, Kg2 = 4500.0, Gco = -0.2, Gcf = 1e-5),
+    "6V6": dict(mu = 10.7, Ex = 1.31, Kp = 41.16, Kvb = 12.7, Kg1 = 1672.0, Kg2 = 4500.0, Gco = -0.2, Gcf = 1e-5),
+    "6V6GT": dict(mu = 12.67, Ex = 1.198, Kp = 38.07, Kvb = 30.2, Kg1 = 915.0, Kg2 = 4500.0, Gco = 0.0, Gcf = 12e-5),
+    "6AU6": dict(mu = 36.65, Ex = 1.376, Kp = 215.42, Kvb = 15.0, Kg1 = 1129.4, Kg2 = 1059, Gco = -0.2, Gcf = 1e-5),
     }
 
 # values taken from Datasheets, Vt is the termal Voltage (const)
 
 Transistors = {
-    "2N5088" : dict(Vt=26e-3,Is=20.3e-15,Bf=1430,Br=4), #npn
-    "2N5089" : dict(Vt=26e-3,Is=5.911e-15,Bf=1434,Br=1.262), #npn
-    "2N3904" : dict(Vt=26e-3,Is=1e-14,Bf=300,Br=4), #npn
-    "2N4401" : dict(Vt=26e-3,Is=9.09e-15,Bf=300,Br=4), #npn
-    "BD139"  : dict(Vt=26e-3,Is=2.3985e-13,Bf=244.9,Br=78.11), #npn
-    "BC108"  : dict(Vt=26e-3,Is=1.8e-14,Bf=400,Br=35.5), #npn
-    "BC546B" : dict(Vt=26e-3,Is=2.39e-14,Bf=294.3,Br=7.946), #npn
-    "AC128"  : dict(Vt=26e-3,Is=5e-6,Bf=90,Br=5),  #pnp
-    "MPSA18" : dict(Vt=26e-3,Is=20.3e-15,Bf=1430,Br=4),  #npn
+    "2N5088": dict(Vt=26e-3, Is=20.3e-15, Bf=1430, Br=4), #npn
+    "2N5089": dict(Vt=26e-3, Is=5.911e-15, Bf=1434, Br=1.262), #npn
+    "2N3904": dict(Vt=26e-3, Is=1e-14, Bf=300, Br=4), #npn
+    "2N4401": dict(Vt=26e-3, Is=9.09e-15, Bf=300, Br=4), #npn
+    "BD139": dict(Vt=26e-3, Is=2.3985e-13, Bf=244.9, Br=78.11), #npn
+    "BC108": dict(Vt=26e-3, Is=1.8e-14, Bf=400, Br=35.5), #npn
+    "BC546B": dict(Vt=26e-3, Is=2.39e-14, Bf=294.3, Br=7.946), #npn
+    "AC128": dict(Vt=26e-3, Is=5e-6, Bf=90, Br=5),  #pnp
+    "MPSA18": dict(Vt=26e-3, Is=20.3e-15, Bf=1430, Br=4),  #npn
     }
 
 # values taken from Datasheets, mUt is now Vt = the termal Voltage (const)
 # N is the Emission coefficient
 
 Diodes = {
-    "D237A"    : dict(Is=31.69e-12, mUt=26e-3, N=1.0),
-    "1N4001"   : dict(Is=29.5e-9, mUt=26e-3, N=1.984),
-    "1N4148"   : dict(Is=2.52e-9, mUt=26e-3, N=1.752),
-    "1N34A"    : dict(Is=2.6e-6, mUt=26e-3, N=1.6),
-    "1N4148"   : dict(Is=2.52e-9, mUt=26e-3, N=1.752),
-    "1N914"    : dict(Is=2.52e-9, mUt=26e-3, N=1.752),
-    "LedRed"   : dict(Is=93.2e-12, mUt=26e-3, N=3.73),
-    "LedWHITE" : dict(Is=0.27e-9, mUt=26e-3, N=6.79),
-    "D311A"    : dict(Is=8e-6, mUt=26e-3, N=1.483),
-    "AA112"    : dict(Is=1.2e-6, mUt=26e-3, N=1.4),
-    "OA90-G"   : dict(Is=54.12e-6, mUt=26e-3, N=4.209),
-    "OA90-M"   : dict(Is=120.5e-6, mUt=26e-3, N=7.405),
+    "D237A": dict(Is=31.69e-12, mUt=26e-3, N=1.0),
+    "1N4001": dict(Is=29.5e-9, mUt=26e-3, N=1.984),
+    "1N4148": dict(Is=2.52e-9, mUt=26e-3, N=1.752),
+    "1N34A": dict(Is=2.6e-6, mUt=26e-3, N=1.6),
+    "1N4148": dict(Is=2.52e-9, mUt=26e-3, N=1.752),
+    "1N914": dict(Is=2.52e-9, mUt=26e-3, N=1.752),
+    "LedRed": dict(Is=93.2e-12, mUt=26e-3, N=3.73),
+    "LedWHITE": dict(Is=0.27e-9, mUt=26e-3, N=6.79),
+    "D311A": dict(Is=8e-6, mUt=26e-3, N=1.483),
+    "AA112": dict(Is=1.2e-6, mUt=26e-3, N=1.4),
+    "OA90-G": dict(Is=54.12e-6, mUt=26e-3, N=4.209),
+    "OA90-M": dict(Is=120.5e-6, mUt=26e-3, N=7.405),
     }
 
 
@@ -102,7 +102,7 @@ class Test(object):
         return "%s%s" % (res[1], s)
 
     def print_data(self, data, prefix=""):
-        print prefix + repr(self.get_samples(data))
+        print((prefix + repr(self.get_samples(data))))
 
     def op_signal(self, op=None, samples=None, timespan=None):
         if timespan is None:
@@ -111,12 +111,12 @@ class Test(object):
             op = self.V["OP"]
         if samples is None:
             samples = timespan*self.FS
-        return np.array((op,),dtype=np.float64).repeat(samples, axis=0)
+        return np.array((op,), dtype=np.float64).repeat(samples, axis=0)
 
     def constant_signal(self, *values):
         a = np.zeros((int(self.timespan*self.FS), len(values)))
         for i, v in enumerate(values):
-            a[:,i] = v
+            a[:, i] = v
         return a
 
     def sine_signal(self, freq, channels=1, timespan=None):
@@ -125,7 +125,7 @@ class Test(object):
         a = np.zeros((int(timespan*self.FS), channels))
         s = np.sin(np.linspace(0, 2*np.pi*freq*timespan, self.FS*timespan))
         for i in range(channels):
-            a[:,i] = s
+            a[:, i] = s
         return a
 
     def timeline(self):
@@ -139,8 +139,8 @@ class Test(object):
         pl.show()
 
     def impulse(self, p, magnitude=1e-3):
-        a = self.op_signal(samples=64*1024, op=self.V.get("OP",[0.]))
-        a[0,0] += magnitude
+        a = self.op_signal(samples=64*1024, op=self.V.get("OP", [0.]))
+        a[0, 0] += magnitude
         return (p(a)-p.o0) / magnitude
 
     def make_sweep(self, pre=None, span=0.5, post=0.1, magnitude=1e-2, start=20, stop=10000):
@@ -157,11 +157,11 @@ class Test(object):
     def sweep(self, p, pre=None, span=0.5, post=0.1, magnitude=1e-2, start=20, stop=10000):
         #s, d = self.make_sweep(pre, span, post, magnitude, start, stop)
         s = self.make_sweep(pre, span, post, magnitude, start, stop)
-        a = self.op_signal(samples=len(s), op=self.V.get("OP",[0.]))
-        a[:,0] += s
+        a = self.op_signal(samples=len(s), op=self.V.get("OP", [0.]))
+        a[:, 0] += s
         y = p(a)-p.o0
         #return dk_lib.fft_convolve(d, y[:,0])
-        return dk_lib.fft_convolve(s, y[:,0], invert=True)
+        return dk_lib.fft_convolve(s, y[:, 0], invert=True)
 
     #spectrum_signal = impulse
     spectrum_signal = sweep
@@ -170,9 +170,9 @@ class Test(object):
         y = self.spectrum_signal(p)
         n = dk_lib.pow2roundup(len(y))
         cut = slice(n*20.0/self.FS, n*10000.0/self.FS)
-        w = fftfreq(n,1.0/self.FS)[cut]
+        w = fftfreq(n, 1.0/self.FS)[cut]
         def spec(y):
-            s = 20*np.log10(abs(np.fft.fft(y,n,axis=0)[cut]))
+            s = 20*np.log10(abs(np.fft.fft(y, n, axis=0)[cut]))
             return np.where(s > -80, s, np.nan)
         pl.semilogx(w, spec(y))
         self.finish_plot(p.out_labels)
@@ -249,7 +249,7 @@ class Transformer_GC_test(Test): # transformer
          (R("s"), 3, GND),
          (Trans_(nw=3), 1, GND, GND, 2, 3, GND),
          (IN, "Vin1", "Vin2"),
-         (OUT, Trans_()('phi',1e2), Trans_()('v'), Trans_()("W1")),
+         (OUT, Trans_()('phi', 1e2), Trans_()('v'), Trans_()("W1")),
          #(OUT, 3),
          )
     V = {R("p1"): 100,
@@ -261,15 +261,15 @@ class Transformer_GC_test(Test): # transformer
          }
 
     result = np.array([
-        [ 0.        ,  0.        ,  0.        ],
-        [ 0.3992909 , -0.00938712, -1.61537868],
+        [ 0.,  0.,  0.        ],
+        [ 0.3992909, -0.00938712, -1.61537868],
         [ 0.38494716,  0.08242046, -0.64855777],
         [ 0.04203609,  1.36258321,  0.06707826],
-        [-0.3932343 , -0.04269338,  1.10292514],
+        [-0.3932343, -0.04269338,  1.10292514],
         [-0.20936599, -1.01472959, -0.04550217],
-        [ 0.3975867 ,  0.02137891, -1.45104038],
+        [ 0.3975867,  0.02137891, -1.45104038],
         [ 0.31854514,  0.55214928,  0.01398803],
-        [-0.3746337 ,  1.22787577,  0.39689002],
+        [-0.3746337,  1.22787577,  0.39689002],
         [-0.36713395, -0.19608725,  0.19608725]])
 
     freq = 40.
@@ -277,7 +277,7 @@ class Transformer_GC_test(Test): # transformer
 
     def signal(self):
         a = 165*self.sine_signal(self.freq, 2)
-        a[:,1] = -a[:,1]
+        a[:, 1] = -a[:, 1]
         return a
 
     def plot(self, p):
@@ -289,16 +289,16 @@ class Transformer_GC_test(Test): # transformer
     def spectrum_signal(self, p):
         if 0:
             s, d = self.make_sweep()
-            a = self.op_signal(samples=len(s), op=self.V.get("OP",[0.,0.]))
-            a[:,0] += s
-            a[:,1] -= s
+            a = self.op_signal(samples=len(s), op=self.V.get("OP", [0., 0.]))
+            a[:, 0] += s
+            a[:, 1] -= s
             y = p(a)-p.o0
             return dk_lib.fft_convolve(d, y)
         else:
             magnitude = 1e-3
-            a = self.op_signal(samples=64*1024, op=self.V.get("OP",[0.,0.]))
-            a[0,0] += magnitude
-            a[0,1] -= magnitude
+            a = self.op_signal(samples=64*1024, op=self.V.get("OP", [0., 0.]))
+            a[0, 0] += magnitude
+            a[0, 1] -= magnitude
             return (p(a)-p.o0) / magnitude
         
 
@@ -314,7 +314,7 @@ class PushPullTransformer_test(Test): # 2 push-pull pentodes with transformer
          (R("L"), "Vo", GND),
          (Trans_(nw=3), 2, "Vps", "Vps", 5, "Vo", GND),
          (IN, "Vin1", "Vin2", "Vps"),
-         (OUT, Trans_()('phi',100), Trans_()('v'), Trans_()("W1"), Trans_()("W2")),
+         (OUT, Trans_()('phi', 100), Trans_()('v'), Trans_()("W1"), Trans_()("W2")),
          )
   
     EL34 = dict(mu = 12.3,
@@ -368,9 +368,9 @@ class PushPullTransformer_test(Test): # 2 push-pull pentodes with transformer
 
     def signal(self):
         a = 50*self.sine_signal(self.freq, 3)
-        a[:,0] = a[:,0] + self.V["OP"][0]
-        a[:,1] = -a[:,1] + self.V["OP"][1]
-        a[:,2] = self.V["OP"][2]
+        a[:, 0] = a[:, 0] + self.V["OP"][0]
+        a[:, 1] = -a[:, 1] + self.V["OP"][1]
+        a[:, 2] = self.V["OP"][2]
         return a
 
     def plot(self, p):
@@ -383,23 +383,23 @@ class PushPullTransformer_test(Test): # 2 push-pull pentodes with transformer
         if 0:
             s, d = self.make_sweep()
             a = self.op_signal(samples=len(s), op=self.V["OP"])
-            a[:,0] += s
-            a[:,1] -= s
+            a[:, 0] += s
+            a[:, 1] -= s
             y = p(a)-p.o0
             return dk_lib.fft_convolve(d, y)
         else:
             magnitude = 1e-3
             a = self.op_signal(samples=64*1024, op=self.V["OP"])
-            a[0,0] += magnitude
-            a[0,1] -= magnitude
+            a[0, 0] += magnitude
+            a[0, 1] -= magnitude
             return (p(a)-p.o0) / magnitude
         
 
 class Resonator_test(Test): # LC-resonator
     S = ((R(), "V0", "V1"),
-         (L(),"V0","V1"),
+         (L(), "V0", "V1"),
          #(Trans_GC(nw=1), "V0", "V1"),
-         (C(),"V1",GND),
+         (C(), "V1", GND),
          #(OUT, "V1",Trans_GC()("phi",1e6)),
          (OUT, "V1"),
          (IN, "V0"),
@@ -490,7 +490,7 @@ class Diode_test(Test):
     def signal(self):
         self.sig = np.linspace(0.2, 0.7)
         a = self.op_signal([0], samples=len(self.sig))
-        a[:,0] = self.sig
+        a[:, 0] = self.sig
         return a
 
     def plot(self, p):
@@ -533,7 +533,7 @@ class Diode_clipper(Test): # diode clipper
     def signal(self):
         self.sig = np.linspace(-1.2, 1.2, 200)
         a = self.op_signal([0], samples=len(self.sig))
-        a[:,0] = self.sig
+        a[:, 0] = self.sig
         return a
 
     def plot(self, p):
@@ -703,7 +703,7 @@ class WahWah_test(Test): # wah-wah
 
     def signal(self):
         a = self.op_signal()
-        a[:,0] += 0.2*self.sine_signal(555.*1.2)[:,0]
+        a[:, 0] += 0.2*self.sine_signal(555.*1.2)[:, 0]
         #a[:,0] += 10*self.sine_signal(555.*1.02)[:,0]
         return a
 
@@ -742,7 +742,7 @@ class WahWah_test(Test): # wah-wah
             if plot_variable not in p.pot_list:
                 raise ArgumentError("variable %s not found" % plot_variable)
             ##hack
-            for k, t in self.V.items():
+            for k, t in list(self.V.items()):
                 if isinstance(k, P):
                     if not isinstance(t, dict):
                         t = dict(value=t)
@@ -766,7 +766,7 @@ class WahWah_test(Test): # wah-wah
         n = None
         cut = None
         def spec(y):
-            s = 20*np.log10(abs(np.fft.fft(y,n,axis=0)[cut]))
+            s = 20*np.log10(abs(np.fft.fft(y, n, axis=0)[cut]))
             return np.where(s > -80, s, np.nan)
         labels = []
         for var, val, lbl in varlist:
@@ -776,9 +776,9 @@ class WahWah_test(Test): # wah-wah
             if n is None:
                 n = dk_lib.pow2roundup(len(y))
                 cut = slice(n*20//int(self.FS), n*10000//int(self.FS))
-                w = fftfreq(n,1.0/self.FS)[cut]
+                w = fftfreq(n, 1.0/self.FS)[cut]
             pl.semilogx(w, spec(y))
-            if isinstance(lbl, basestring):
+            if isinstance(lbl, str):
                 labels.append(lbl)
             else:
                 labels.extend(lbl)
@@ -807,7 +807,7 @@ class WahWah_ss(WahWah_test): # wah-wah small signal model
         J = sim.jacobi()
         f = dk_simulator.LinearFilter(p, J)
         b, a = f.get_z_coeffs(samplerate=48000, subst_var=f.convert_variable_dict({}))
-        res = np.array([[float(v) for v in b],[float(v) for v in a]])
+        res = np.array([[float(v) for v in b], [float(v) for v in a]])
         if np.allclose(res, self.result):
             return "Ok"
         else:
@@ -842,9 +842,9 @@ class Transistor_test(Test): # transistor test
        [  2.50000000e+00,   2.09652273e+00,   1.65153038e+00]])
 
     def signal(self):
-        self.sig = np.linspace(0,2.5)
-        a = self.op_signal([0,10], len(self.sig))
-        a[:,0] += self.sig
+        self.sig = np.linspace(0, 2.5)
+        a = self.op_signal([0, 10], len(self.sig))
+        a[:, 0] += self.sig
         return a
 
     def plot(self, p):
@@ -877,7 +877,7 @@ class Triode1_test(Test): # triode test
     def signal(self):
         self.sig = np.linspace(-0.2, 10, 200)
         a = self.op_signal(samples=len(self.sig))
-        a[:,0] += self.sig
+        a[:, 0] += self.sig
         return a
 
     def plot(self, p):
@@ -892,7 +892,7 @@ class Triode2_test(Test): # triode test 2
          (R("a"), "Va", "Vcc"),
          (R("k"), "Vk", GND),
          (IN, "Vi", "Vcc"),
-         (OUT, "Vi", "Vg", "Vk", Out("Va",5e-2)),
+         (OUT, "Vi", "Vg", "Vk", Out("Va", 5e-2)),
          )
 
     V = {Triode(): dict(mu = 100.0, Ex = 1.4, Kp = 600.0, Kvb = 300.0, Kg1 = 1060.0, Gco = -0.2, Gcf = 1e-5),
@@ -926,7 +926,7 @@ class Triode2_test(Test): # triode test 2
     def signal(self):
         self.sig = np.linspace(-3.5, 10, 200)
         a = self.op_signal(samples=len(self.sig))
-        a[:,0] += self.sig
+        a[:, 0] += self.sig
         return a
 
     def plot(self, p):
@@ -969,7 +969,7 @@ class Preamp_test(Test):
          (R(3), 3, GND),
          (R(2), 2, 1),
          (R(1), 1, GND),
-         (OUT, Out(17,2.62e-3)),
+         (OUT, Out(17, 2.62e-3)),
          (IN, 1),
          )
 
@@ -1094,7 +1094,7 @@ class Pentode2_test(Test): # push_pull test
          (R(3), 'u4', GND,),
          (R(2), 'u3', GND,),
          (IN, 'in',),
-         (OUT, 'out','in',),
+         (OUT, 'out', 'in',),
          )
     V = {C(1): 25.e-6,
          C(3): 0.1e-6,
@@ -1133,7 +1133,7 @@ class Pentode2_test(Test): # push_pull test
     def signal(self):
         self.sig = np.linspace(0, 24.0, 200)
         a = self.op_signal(samples=len(self.sig))
-        a[:,0] += self.sig
+        a[:, 0] += self.sig
         return a
 
     # def signal(self):
@@ -1152,7 +1152,7 @@ class Pentode2_test(Test): # push_pull test
             if plot_variable not in p.pot_list:
                 raise ArgumentError("variable %s not found" % plot_variable)
             ##hack
-            for k, t in self.V.items():
+            for k, t in list(self.V.items()):
                 if isinstance(k, P):
                     if not isinstance(t, dict):
                         t = dict(value=t)
@@ -1176,7 +1176,7 @@ class Pentode2_test(Test): # push_pull test
         n = None
         cut = None
         def spec(y):
-            s = 20*np.log10(abs(np.fft.fft(y,n,axis=0)[cut]))
+            s = 20*np.log10(abs(np.fft.fft(y, n, axis=0)[cut]))
             return np.where(s > -80, s, np.nan)
         labels = []
         for var, val, lbl in varlist:
@@ -1186,13 +1186,13 @@ class Pentode2_test(Test): # push_pull test
             if n is None:
                 n = dk_lib.pow2roundup(len(y))
                 cut = slice(n*20//int(self.FS), n*10000//int(self.FS))
-                w = fftfreq(n,1.0/self.FS)[cut]
-            pl.semilogx(w, spec(y),label=plot_variable)
+                w = fftfreq(n, 1.0/self.FS)[cut]
+            pl.semilogx(w, spec(y), label=plot_variable)
             pl.xlabel('Frequency')
             pl.ylabel('Magnitude ')
             if plot_variable:
                 pl.title(plot_variable)
-            if isinstance(lbl, basestring):
+            if isinstance(lbl, str):
                 labels.append(lbl)
             else:
                 labels.extend(lbl)
@@ -1219,7 +1219,7 @@ class Fuzz_test(Test): # fuzz face fuller mods test
          (R(4), 'u3', 'u2',),
          (R(6), 'u1', '+9V',),
          (IN, 'in',),
-         (OUT, 'out','in',),
+         (OUT, 'out', 'in',),
          )
     V = {C(1): 2.2e-6,
          C(4): 0.01e-6,
@@ -1269,7 +1269,7 @@ class Fuzz_test(Test): # fuzz face fuller mods test
             if plot_variable not in p.pot_list:
                 raise ArgumentError("variable %s not found" % plot_variable)
             ##hack
-            for k, t in self.V.items():
+            for k, t in list(self.V.items()):
                 if isinstance(k, P):
                     if not isinstance(t, dict):
                         t = dict(value=t)
@@ -1293,7 +1293,7 @@ class Fuzz_test(Test): # fuzz face fuller mods test
         n = None
         cut = None
         def spec(y):
-            s = 20*np.log10(abs(np.fft.fft(y,n,axis=0)[cut]))
+            s = 20*np.log10(abs(np.fft.fft(y, n, axis=0)[cut]))
             return np.where(s > -80, s, np.nan)
         labels = []
         for var, val, lbl in varlist:
@@ -1303,13 +1303,13 @@ class Fuzz_test(Test): # fuzz face fuller mods test
             if n is None:
                 n = dk_lib.pow2roundup(len(y))
                 cut = slice(n*20//int(self.FS), n*10000//int(self.FS))
-                w = fftfreq(n,1.0/self.FS)[cut]
-            pl.semilogx(w, spec(y),label=plot_variable)
+                w = fftfreq(n, 1.0/self.FS)[cut]
+            pl.semilogx(w, spec(y), label=plot_variable)
             pl.xlabel('Frequency')
             pl.ylabel('Magnitude ')
             if plot_variable:
                 pl.title(plot_variable)
-            if isinstance(lbl, basestring):
+            if isinstance(lbl, str):
                 labels.append(lbl)
             else:
                 labels.extend(lbl)

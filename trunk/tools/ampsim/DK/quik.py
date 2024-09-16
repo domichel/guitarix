@@ -33,7 +33,7 @@
 
 import re, operator, os
 try:
-    from StringIO import StringIO
+    from io import StringIO
 except ImportError:
     from io import StringIO
     xrange = range
@@ -112,14 +112,14 @@ class FileLoader:
         self.known_templates = {}
         self.debugging = debugging
         if debugging:
-            print("creating caching file loader with basedir: {0}".format(basedir))
+            print(("creating caching file loader with basedir: {0}".format(basedir)))
 
     def filename_of(self, name):
         return os.path.join(self.basedir, name)
 
     def load_text(self, name):
         if self.debugging:
-            print("Loading text from {0} {1}".format(self.basedir, name))
+            print(("Loading text from {0} {1}".format(self.basedir, name)))
         f = open(self.filename_of(name))
         try:
             return f.read()
@@ -128,7 +128,7 @@ class FileLoader:
 
     def load_template(self, name):
         if self.debugging:
-            print("Loading template... {0}".format(name))
+            print(("Loading template... {0}".format(name)))
 
         mtime = os.path.getmtime(self.filename_of(name))
         if self.known_templates.get(name, None):
@@ -361,8 +361,8 @@ class Range(_Element):
         value1 = self.value1.calculate(namespace, loader)
         value2 = self.value2.calculate(namespace, loader)
         if value2 < value1:
-            return xrange(value1, value2 - 1, -1)
-        return xrange(value1, value2 + 1)
+            return list(range(value1, value2 - 1, -1))
+        return list(range(value1, value2 + 1))
 
 
 class ValueList(_Element):
@@ -426,7 +426,7 @@ class DictionaryLiteral(_Element):
     # TODO confirm that that's correct.
     def calculate(self, namespace, loader):
         tmp = {}
-        for (key,val) in self.local_data.items():
+        for (key, val) in list(self.local_data.items()):
             tmp[key.calculate(namespace, loader)] = val.calculate(namespace, loader)
         return tmp
 
@@ -532,12 +532,12 @@ class FormalReference(_Element):
             else: value = self.my_text()
 
         try:
-            basestring
+            str
             def is_string(s):
-                return isinstance(s, basestring)
+                return isinstance(s, str)
         except NameError:
             def is_string(s):
-                return type(s) == type('')
+                return isinstance(s, type(''))
 
         if is_string(value):
             stream.write(value)
@@ -584,10 +584,10 @@ class BinaryOperator(_Element):
         '==': operator.eq,
         '!=': operator.ne,
         '%': operator.mod,
-        '||': lambda a,b : boolean_value(a) or boolean_value(b),
-        '&&': lambda a,b : boolean_value(a) and boolean_value(b),
-        'or': lambda a,b : boolean_value(a) or boolean_value(b),
-        'and': lambda a,b : boolean_value(a) and boolean_value(b),
+        '||': lambda a, b : boolean_value(a) or boolean_value(b),
+        '&&': lambda a, b : boolean_value(a) and boolean_value(b),
+        'or': lambda a, b : boolean_value(a) or boolean_value(b),
+        'and': lambda a, b : boolean_value(a) and boolean_value(b),
         '+' : operator.add,
         '-' : operator.sub,
         '/' : lambda a, b: a / b,
@@ -951,7 +951,7 @@ class ForDirective(_Element):
         try:
             if iterable is None:
                 return
-            if hasattr(iterable, 'keys'): iterable = iterable.keys()
+            if hasattr(iterable, 'keys'): iterable = list(iterable.keys())
             try:
                 length = len(iterable)
             except TypeError:

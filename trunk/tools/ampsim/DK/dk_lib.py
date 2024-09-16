@@ -1,4 +1,4 @@
-from __future__ import division
+
 import contextlib, math, logging
 import numpy as np
 import numpy.core.arrayprint as npap
@@ -67,12 +67,12 @@ def genlogsweep(fmin, fmax, rate, k0, k1, k2, dtype=np.float64):
             x *= g
         return x, x * q
     if k0:
-        t = np.arange(-k0,0)
+        t = np.arange(-k0, 0)
         s1[:k0], s2[:k0] = sweep(t, np.cos(0.5 * np.pi * t / k0))
     t = np.arange(k1)
     s1[k0:k0+k1], s2[k0:k0+k1] = sweep(t)
     if k2:
-        t = np.arange(k1,k1+k2)
+        t = np.arange(k1, k1+k2)
         s1[k0+k1:], s2[k0+k1:] = sweep(t, np.sin(0.5 * np.pi * (k1 + k2 - t) / k2))
     s2 = s2[::-1] * 4 * b * b
     return s1, s2, fmin, fmax, k1 / math.log(fmax / fmin)

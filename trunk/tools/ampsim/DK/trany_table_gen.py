@@ -1,5 +1,5 @@
 # -*- coding: utf-8 -*-
-from __future__ import division
+
 
 import math
 import pylab as pl
@@ -25,12 +25,12 @@ class gen(object):
             op = self.V["OP"]
         if samples is None:
             samples = timespan*self.FS
-        return np.array((op,),dtype=np.float64).repeat(samples, axis=0)
+        return np.array((op,), dtype=np.float64).repeat(samples, axis=0)
 
     def constant_signal(self, *values):
         a = np.zeros((int(self.timespan*self.FS), len(values)))
         for i, v in enumerate(values):
-            a[:,i] = v
+            a[:, i] = v
         return a
 
     def timeline(self):
@@ -50,17 +50,17 @@ mag_dict = {
     "n": "e-9",
     "p": "e-12",
     "f": "e-15",
-    "" : "",
+    "": "",
     }
 
 # add new models here
 Transistors = {
-    "2N5088" : dict(Vt=26e-3,Is=20.3e-15,Bf=1430,Br=4),
-    "2N3904" : dict(Vt=26e-3,Is=1e-14,Bf=300,Br=4),
-    "2N4401" : dict(Vt=26e-3,Is=9.09e-15,Bf=300,Br=4),
-    "BD139"  : dict(Vt=26e-3,Is=2.3985e-13,Bf=244.9,Br=78.11),
-    "BC108"  : dict(Vt=26e-3,Is=1.8e-14,Bf=400,Br=35.5),
-    "MPSA18" : dict(Vt=26e-3,Is=20.3e-15,Bf=1430,Br=4),
+    "2N5088": dict(Vt=26e-3, Is=20.3e-15, Bf=1430, Br=4),
+    "2N3904": dict(Vt=26e-3, Is=1e-14, Bf=300, Br=4),
+    "2N4401": dict(Vt=26e-3, Is=9.09e-15, Bf=300, Br=4),
+    "BD139": dict(Vt=26e-3, Is=2.3985e-13, Bf=244.9, Br=78.11),
+    "BC108": dict(Vt=26e-3, Is=1.8e-14, Bf=400, Br=35.5),
+    "MPSA18": dict(Vt=26e-3, Is=20.3e-15, Bf=1430, Br=4),
     }
 
 class Transistor_table(gen):
@@ -72,7 +72,7 @@ class Transistor_table(gen):
     S = ''
     V = ''
     model = ''
-    def set_model(self,model):
+    def set_model(self, model):
         self.model = model
         self.S = ((R(1), "Vcc", "Vc"),
              (R(2), "Ve", GND),
@@ -133,9 +133,9 @@ double always_inline tranyclip(double x) {
 """
 
     def signal(self):
-        self.sig = np.linspace(0,self.max_sig,100)
-        a = self.op_signal([0,self.max_op], len(self.sig))
-        a[:,0] += self.sig
+        self.sig = np.linspace(0, self.max_sig, 100)
+        a = self.op_signal([0, self.max_op], len(self.sig))
+        a[:, 0] += self.sig
         return a
 
     def generate_table(self, p, filename=None):
@@ -185,11 +185,11 @@ def main(argv):
     else:
         arg = str(sys.argv[1])
     argoky = 0
-    if arg in Transistors.keys():
+    if arg in list(Transistors.keys()):
         argoky = 1
     if not argoky:
         print (' please give on of the Transistor model name')
-        print (Transistors.keys())
+        print((list(Transistors.keys())))
         exit()
         
     t = "Transistor_table"

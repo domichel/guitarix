@@ -1,5 +1,5 @@
 # -*- coding: utf-8 -*-
-from __future__ import division
+
 
 import math
 import pylab as pl
@@ -25,12 +25,12 @@ class gen(object):
             op = self.V["OP"]
         if samples is None:
             samples = timespan*self.FS
-        return np.array((op,),dtype=np.float64).repeat(samples, axis=0)
+        return np.array((op,), dtype=np.float64).repeat(samples, axis=0)
 
     def constant_signal(self, *values):
         a = np.zeros((int(self.timespan*self.FS), len(values)))
         for i, v in enumerate(values):
-            a[:,i] = v
+            a[:, i] = v
         return a
 
     def timeline(self):
@@ -49,20 +49,20 @@ mag_dict = {
     "n": "e-9",
     "p": "e-12",
     "f": "e-15",
-    "" : "",
+    "": "",
     }
 
 Diodes = {
-    "D237A"    : dict(Is=31.69e-12, mUt=26e-3, N=1.0),
-    "1N4001"   : dict(Is=29.5e-9, mUt=26e-3, N=1.984),
-    "1N34A"    : dict(Is=2.6e-6, mUt=26e-3, N=1.6),
-    "1N4148"   : dict(Is=2.52e-9, mUt=26e-3, N=1.752),
-    "LedRed"   : dict(Is=93.2e-12, mUt=26e-3, N=3.73),
-    "LedWHITE" : dict(Is=0.27e-9, mUt=26e-3, N=6.79),
-    "D311A"    : dict(Is=8e-6, mUt=26e-3, N=1.483),
-    "AA112"    : dict(Is=1.2e-6, mUt=26e-3, N=1.4),
-    "OA90-G"   : dict(Is=54.12e-6, mUt=26e-3, N=4.209),
-    "OA90-M"   : dict(Is=120.5e-6, mUt=26e-3, N=7.405),
+    "D237A": dict(Is=31.69e-12, mUt=26e-3, N=1.0),
+    "1N4001": dict(Is=29.5e-9, mUt=26e-3, N=1.984),
+    "1N34A": dict(Is=2.6e-6, mUt=26e-3, N=1.6),
+    "1N4148": dict(Is=2.52e-9, mUt=26e-3, N=1.752),
+    "LedRed": dict(Is=93.2e-12, mUt=26e-3, N=3.73),
+    "LedWHITE": dict(Is=0.27e-9, mUt=26e-3, N=6.79),
+    "D311A": dict(Is=8e-6, mUt=26e-3, N=1.483),
+    "AA112": dict(Is=1.2e-6, mUt=26e-3, N=1.4),
+    "OA90-G": dict(Is=54.12e-6, mUt=26e-3, N=4.209),
+    "OA90-M": dict(Is=120.5e-6, mUt=26e-3, N=7.405),
     }
 
 
@@ -76,7 +76,7 @@ class Diode_clipper(gen): # diode clipper
     V = ''
     model = ''
 
-    def set_model(self,model):
+    def set_model(self, model):
         self.model = model
         D_ = D2  # 2 antisymmetric diodes
         #D_ = D  # one diode
@@ -136,7 +136,7 @@ double always_inline diodeclip(double x) {
     def signal(self):
         self.sig = np.linspace(0, self.max_sig, 100)
         a = self.op_signal([0], samples=len(self.sig))
-        a[:,0] = self.sig
+        a[:, 0] = self.sig
         return a
 
     def generate_table(self, p, filename=None):
@@ -186,11 +186,11 @@ def main(argv):
     else:
         arg = str(sys.argv[1])
     argoky = 0
-    if arg in Diodes.keys():
+    if arg in list(Diodes.keys()):
         argoky = 1
     if not argoky:
         print (' please give on of the Diode model name')
-        print (Diodes.keys())
+        print((list(Diodes.keys())))
         exit()
         
     t = "Diode_clipper"

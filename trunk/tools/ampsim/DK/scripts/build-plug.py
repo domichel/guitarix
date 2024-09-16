@@ -1,14 +1,14 @@
 import os
-import argparse,sys
+import argparse, sys
 
 parser = argparse.ArgumentParser(description='Build script for guitarix plugins.')
-parser.add_argument('-i','--input', help='Input file name [REQUIRED]',required=True)
-parser.add_argument('-n','--name',help='Name for plugin [OPTIONAL]', required=False)
-parser.add_argument('-s','--shortname',help='Shortname for plugin [OPTIONAL]', required=False)
-parser.add_argument('-d','--description',help='Description for plugin [OPTIONAL]', required=False)
-parser.add_argument('-c','--category',help='Category for plugin [OPTIONAL]', required=False)
-parser.add_argument('-m','--module_id',help='Module ID for plugin [OPTIONAL]', required=False)
-parser.add_argument('-p','--prefilter',help='prefilter for plugin [OPTIONAL]', required=False)
+parser.add_argument('-i', '--input', help='Input file name [REQUIRED]', required=True)
+parser.add_argument('-n', '--name', help='Name for plugin [OPTIONAL]', required=False)
+parser.add_argument('-s', '--shortname', help='Shortname for plugin [OPTIONAL]', required=False)
+parser.add_argument('-d', '--description', help='Description for plugin [OPTIONAL]', required=False)
+parser.add_argument('-c', '--category', help='Category for plugin [OPTIONAL]', required=False)
+parser.add_argument('-m', '--module_id', help='Module ID for plugin [OPTIONAL]', required=False)
+parser.add_argument('-p', '--prefilter', help='prefilter for plugin [OPTIONAL]', required=False)
 args = parser.parse_args()
  
 ## show values ##
@@ -20,7 +20,7 @@ description = args.description
 category = args.category
 module_id = args.module_id
 prefilter = args.prefilter
-print ("Input file: %s" % args.input )
+print(("Input file: %s" % args.input ))
 del sys.argv[1:]
 
 from analog import *
@@ -29,7 +29,7 @@ path = "tmp"
 
 if not module_id:
 	module_id = schema.split('.')[0].lower()
-print ("module_id: %s" % module_id )
+print(("module_id: %s" % module_id ))
 mod = os.path.join(path, module_id+".so")
 
 
@@ -43,11 +43,11 @@ def calc_highpass_f0(c1, c2):
     for i, Level in enumerate(numpy.linspace(0, 1, 11)):
         c1.set_pot_variable('Level', Level)
         c1.stream(s)
-        h1 = s.get_spectrum(c1.last_output[:,0], w)
+        h1 = s.get_spectrum(c1.last_output[:, 0], w)
 
         c2.set_pot_variable('Level', Level)
         c2.stream(s)
-        h2 = s.get_spectrum(c2.last_output[:,0], w)
+        h2 = s.get_spectrum(c2.last_output[:, 0], w)
 
         ydata = numpy.log(abs(h1/h2))
         e = numpy.exp(-1j*w)
@@ -84,7 +84,7 @@ c1.read_gschem(workfile)
 #c0 = Circuit(c1)
 #f0 = calc_highpass_f0(c0, c1)
 #print ("calc_highpass: %s" % f0 )
-print ("build plugin from: %s" % args.input)
+print(("build plugin from: %s" % args.input))
 if not prefilter:
     c1.create_faust_module()
     #dspfile = "./"+module_id+".dsp"

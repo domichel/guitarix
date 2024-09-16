@@ -1,4 +1,4 @@
-from __future__ import division
+
 import numpy as np
 import sympy as sp
 
@@ -20,7 +20,7 @@ class Node(object):
     def __repr__(self):
         return "%s%s" % (self.nm, self.d or "")
     def __hash__(self):
-        return hash((self.nm,self.d))
+        return hash((self.nm, self.d))
     def __eq__(self, o):
         if not isinstance(o, Node):
             return False
@@ -70,7 +70,7 @@ class OutU(Out):
         self.fact = fact
 
     def get_index(self, p):
-        return p.extra_variable_by_name((self.node,self.f)), self.fact
+        return p.extra_variable_by_name((self.node, self.f)), self.fact
 
     def __repr__(self):
         return "%s%s" % (self.node, self.f and ("[%s]" % self.f) or "")
@@ -254,7 +254,7 @@ class D(Node):
             Is, mUt = const = sp.symbols("Is,mUt")
             v0, = v = sp.symbols("v:1", seq=True)
             calc = -Is * (sp.exp(v0/mUt) - 1)
-        calc = calc.subs(dict([(k,param[str(k)]) for k in const]))
+        calc = calc.subs(dict([(k, param[str(k)]) for k in const]))
         idx = p.new_row("N", self)
         p.add_2conn("Nl", idx, conn)
         p.add_2conn("Nr", idx, conn)
@@ -274,7 +274,7 @@ class D2(Node):
             Is, mUt = const = sp.symbols("Is,mUt")
             v0, = v = sp.symbols("v:1", seq=True)
             calc = -2 * Is * sp.sinh(v0/mUt)
-        calc = calc.subs(dict([(k,param[str(k)]) for k in const]))
+        calc = calc.subs(dict([(k, param[str(k)]) for k in const]))
         idx = p.new_row("N", self)
         p.add_2conn("Nl", idx, (conn[0], conn[1]))
         p.add_2conn("Nr", idx, (conn[0], conn[1]))
@@ -293,13 +293,13 @@ class VCCS(Node):
                 p.S[conn[2], conn[0]] += dG
             if conn[1] != -1:
                 p.S[conn[2], conn[1]] -= dG
-            p.ConstVoltages[0,conn[2]] += i0
+            p.ConstVoltages[0, conn[2]] += i0
         if conn[3] != -1:
             if conn[0] != -1:
                 p.S[conn[3], conn[0]] -= dG
             if conn[1] != -1:
                 p.S[conn[3], conn[1]] += dG
-            p.ConstVoltages[0,conn[3]] -= i0
+            p.ConstVoltages[0, conn[3]] -= i0
 
 class T(Node):
     def __init__(self, n=None):
@@ -313,16 +313,16 @@ class T(Node):
         Is, Bf, Vt, Br = const = sp.symbols("Is,Bf,Vt,Br")
         Vbc, Vbe = v = sp.symbols("Vbc,Vbe")
         calc_ib = -(Is / Bf * (sp.exp(Vbe/Vt)-1) + Is/Br * (sp.exp(Vbc/Vt)-1))
-        calc_ib = calc_ib.subs(dict([(k,param[str(k)]) for k in const]))
+        calc_ib = calc_ib.subs(dict([(k, param[str(k)]) for k in const]))
         calc_ie = -(-Is*(sp.exp(Vbe/Vt)-1) + Is*(Br-1)/Br * (sp.exp(Vbc/Vt)-1))
-        calc_ie = calc_ie.subs(dict([(k,param[str(k)]) for k in const]))
+        calc_ie = calc_ie.subs(dict([(k, param[str(k)]) for k in const]))
         idx1 = p.new_row("N", self, "Ib")
-        p.add_2conn("Nl", idx1, (conn[1],conn[0]))
-        p.add_2conn("Nr", idx1, (conn[1],conn[0]))
+        p.add_2conn("Nl", idx1, (conn[1], conn[0]))
+        p.add_2conn("Nr", idx1, (conn[1], conn[0]))
         p.set_function(idx1, calc_ib, v, idx1)
         idx2 = p.new_row("N", self, "Ie")
-        p.add_2conn("Nl", idx2, (conn[1],conn[2]))
-        p.add_2conn("Nr", idx2, (conn[2],conn[0]))
+        p.add_2conn("Nl", idx2, (conn[1], conn[2]))
+        p.add_2conn("Nr", idx2, (conn[2], conn[0]))
         p.set_function(idx2, calc_ie, v, idx1)
 
 class Tp(Node):
@@ -337,16 +337,16 @@ class Tp(Node):
         Is, Bf, Vt, Br = const = sp.symbols("Is,Bf,Vt,Br")
         Vbc, Vbe = v = sp.symbols("Vbc,Vbe")
         calc_ib = -(Is / Bf * (sp.exp(Vbe/Vt)-1) + Is/Br * (sp.exp(Vbc/Vt)-1))
-        calc_ib = calc_ib.subs(dict([(k,param[str(k)]) for k in const]))
+        calc_ib = calc_ib.subs(dict([(k, param[str(k)]) for k in const]))
         calc_ie = -(-Is*(sp.exp(Vbe/Vt)-1) + Is*(Br-1)/Br * (sp.exp(Vbc/Vt)-1))
-        calc_ie = calc_ie.subs(dict([(k,param[str(k)]) for k in const]))
+        calc_ie = calc_ie.subs(dict([(k, param[str(k)]) for k in const]))
         idx1 = p.new_row("N", self, "Ib")
-        p.add_2conn("Nl", idx1, (conn[0],conn[1]))
-        p.add_2conn("Nr", idx1, (conn[0],conn[1]))
+        p.add_2conn("Nl", idx1, (conn[0], conn[1]))
+        p.add_2conn("Nr", idx1, (conn[0], conn[1]))
         p.set_function(idx1, calc_ib, v, idx1)
         idx2 = p.new_row("N", self, "Ie")
-        p.add_2conn("Nl", idx2, (conn[2],conn[1]))
-        p.add_2conn("Nr", idx2, (conn[0],conn[2]))
+        p.add_2conn("Nl", idx2, (conn[2], conn[1]))
+        p.add_2conn("Nr", idx2, (conn[0], conn[2]))
         p.set_function(idx2, calc_ie, v, idx1)
 
 class Triode(Node):
@@ -363,11 +363,11 @@ class Triode(Node):
         calc_Ia = sp.Piecewise(
             (0, Uak < 0),
             (0, t < -500),
-            (-pow(E1_,Ex) / Kg1 * (1+sp.sign(E1_)), t > 500),
-            (-pow(E1,Ex) / Kg1 * (1+sp.sign(E1)), True))
-        calc_Ia = calc_Ia.subs(dict([(k,param[str(k)]) for k in const]))
+            (-pow(E1_, Ex) / Kg1 * (1+sp.sign(E1_)), t > 500),
+            (-pow(E1, Ex) / Kg1 * (1+sp.sign(E1)), True))
+        calc_Ia = calc_Ia.subs(dict([(k, param[str(k)]) for k in const]))
         calc_Ig = sp.Piecewise((0, Ugk < Gco), (-Gcf*pow(Ugk-Gco, 1.5), True))
-        calc_Ig = calc_Ig.subs(dict([(k,param[str(k)]) for k in const]))
+        calc_Ig = calc_Ig.subs(dict([(k, param[str(k)]) for k in const]))
         # def calc_Ia(v):
         #     Ugk = float(v[0])
         #     Uak = float(v[1])
@@ -389,12 +389,12 @@ class Triode(Node):
         #     r = Gcf*pow(Ugk-Gco, 1.5)
         #     return -r
         idx1 = p.new_row("N", self, "Ig")
-        p.add_2conn("Nl", idx1, (conn[0],conn[2]))
-        p.add_2conn("Nr", idx1, (conn[0],conn[2]))
+        p.add_2conn("Nl", idx1, (conn[0], conn[2]))
+        p.add_2conn("Nr", idx1, (conn[0], conn[2]))
         p.set_function(idx1, calc_Ig, v, idx1)
         idx2 = p.new_row("N", self, "Ip")
-        p.add_2conn("Nl", idx2, (conn[1],conn[2]))
-        p.add_2conn("Nr", idx2, (conn[1],conn[2]))
+        p.add_2conn("Nl", idx2, (conn[1], conn[2]))
+        p.add_2conn("Nr", idx2, (conn[1], conn[2]))
         p.set_function(idx2, calc_Ia, v, idx1)
 
 class Pentode(Node):
@@ -413,14 +413,14 @@ class Pentode(Node):
         calc_Ia = sp.Piecewise(
             (0, Ug2k <= 0),
             (0, t < -500),
-            (-pow(E1_,Ex)/Kg1 * (1+sign(E1_)) * sp.atan(Uak/Kvb), t > 500),
-            (-pow(E1,Ex)/Kg1 * (1+sign(E1)) * sp.atan(Uak/Kvb), True))
-        calc_Ia = calc_Ia.subs(dict([(k,param[str(k)]) for k in const]))
+            (-pow(E1_, Ex)/Kg1 * (1+sign(E1_)) * sp.atan(Uak/Kvb), t > 500),
+            (-pow(E1, Ex)/Kg1 * (1+sign(E1)) * sp.atan(Uak/Kvb), True))
+        calc_Ia = calc_Ia.subs(dict([(k, param[str(k)]) for k in const]))
         calc_Ig = sp.Piecewise((0, Ug1k < Gco), (-Gcf*pow(Ug1k-Gco, 1.5), True))
-        calc_Ig = calc_Ig.subs(dict([(k,param[str(k)]) for k in const]))
+        calc_Ig = calc_Ig.subs(dict([(k, param[str(k)]) for k in const]))
         t = Ug2k / mu + Ug1k
         calc_Is = sp.Piecewise((0, t <= 0), (-sp.exp(Ex*sp.log(t)) / Kg2, True))
-        calc_Is = calc_Is.subs(dict([(k,param[str(k)]) for k in const]))
+        calc_Is = calc_Is.subs(dict([(k, param[str(k)]) for k in const]))
         # def calc_Ia(v):
         #     Ug1k = float(v[0])
         #     Ug2k = float(v[1])
@@ -453,16 +453,16 @@ class Pentode(Node):
         #     return -r
 
         idx1 = p.new_row("N", self, "Ig")
-        p.add_2conn("Nl", idx1, (conn[0],conn[3]))
-        p.add_2conn("Nr", idx1, (conn[0],conn[3]))
+        p.add_2conn("Nl", idx1, (conn[0], conn[3]))
+        p.add_2conn("Nr", idx1, (conn[0], conn[3]))
         p.set_function(idx1, calc_Ig, v[:1], idx1)
         idx2 = p.new_row("N", self, "Is")
-        p.add_2conn("Nl", idx2, (conn[1],conn[3]))
-        p.add_2conn("Nr", idx2, (conn[1],conn[3]))
+        p.add_2conn("Nl", idx2, (conn[1], conn[3]))
+        p.add_2conn("Nr", idx2, (conn[1], conn[3]))
         p.set_function(idx2, calc_Is, v, idx1)
         idx3 = p.new_row("N", self, "Ip")
-        p.add_2conn("Nl", idx3, (conn[2],conn[3]))
-        p.add_2conn("Nr", idx3, (conn[2],conn[3]))
+        p.add_2conn("Nl", idx3, (conn[2], conn[3]))
+        p.add_2conn("Nr", idx3, (conn[2], conn[3]))
         p.set_function(idx3, calc_Ia, v, idx1)
 
 class Trans_L(Node):
@@ -533,7 +533,7 @@ class Trans_F(Node):
         b, c = const = sp.symbols("b,c")
         v0, = v = sp.symbols("v:1", seq=True)
         calc_frohlich = -(c * v0) / (1 - b * abs(v0))
-        calc_frohlich = calc_frohlich.subs(dict([(k,param[str(k)]) for k in const]))
+        calc_frohlich = calc_frohlich.subs(dict([(k, param[str(k)]) for k in const]))
         # def calc_frohlich(v):
         #     v = float(v[0])
         #     #b = 255.
@@ -586,7 +586,7 @@ class Trans_GC(Node):
         phi, = v = sp.symbols("phi", seq=True, real=True) # "real" needed to get derivative of sign()
         t = phi / C
         calc_gc_MMF = -(a * pow(abs(t), n) * sp.sign(t)) + o
-        calc_gc_MMF = calc_gc_MMF.subs(dict([(k,param[str(k)]) for k in const]))
+        calc_gc_MMF = calc_gc_MMF.subs(dict([(k, param[str(k)]) for k in const]))
         # def calc_gc_MMF(v):
         #     v = float(v[0])
         #     #C = 2e-3
@@ -632,7 +632,7 @@ class V(Node):
         idx = p.new_row("V", self)
         p.S[idx, conn[0]] += 1
         p.S[conn[0], idx] += 1
-        p.ConstVoltages[0,idx] += param
+        p.ConstVoltages[0, idx] += param
 
 class OPA(Node):
     def __init__(self, n=None):
@@ -650,7 +650,7 @@ class OPA(Node):
             v0, = v = sp.symbols("v:1", seq=True)
             a = 2*A/(Vcc-Vee)
             calc = 0.5 * (sp.tanh(a*v0) * (Vcc-Vee) + Vcc + Vee)
-            calc = calc.subs(dict([(k,param[str(k)]) for k in const]))
+            calc = calc.subs(dict([(k, param[str(k)]) for k in const]))
             idx = p.new_row("N", self)
             p.add_conn("Nl", idx, conn[0], 1)
             p.add_conn("Nl", idx, conn[1], -1)

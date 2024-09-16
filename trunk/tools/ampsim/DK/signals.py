@@ -1,4 +1,4 @@
-from __future__ import division
+
 import sympy as sp
 import numpy as np
 import types, math
@@ -23,7 +23,7 @@ class GeneratedSignal(object):
         if isinstance(self.signal, tuple):
             self.signal = np.array(self.signal).T
         else:
-            self.signal = self.signal[:,np.newaxis]
+            self.signal = self.signal[:, np.newaxis]
         samples = len(self.signal)
         if len(op) != self.signal.shape[1]:
             raise ValueError(
@@ -343,6 +343,6 @@ class Signal(object):
             samples = periods * self._s_FS / self._s_freq ##FIXME
         elif samples is None:
             samples = self._s_FS * self.timespan
-        if isinstance(expr, (int,float)) or not (self.t in expr.atoms() or expr.atoms(self._s_time)):
+        if isinstance(expr, (int, float)) or not (self.t in expr.atoms() or expr.atoms(self._s_time)):
             expr += self._s_null(self.t)
         return expr.subs(self.t, self._s_time(samples, self._s_FS))
