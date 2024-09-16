@@ -62,7 +62,7 @@ def read_referenced_methods_web(basedir):
     for f in os.listdir(basedir):
         if not f.endswith(".js"):
             continue
-        buf = open(os.path.join(basedir,f)).read()
+        buf = open(os.path.join(basedir, f)).read()
         for m in callref_search(buf):
             name = m.group('n1') or m.group('n2')
             fw[name] = True
@@ -74,10 +74,10 @@ def read_referenced_methods_web(basedir):
 def printlist(title, s):
     if not s:
         return
-    print
-    print title
+    print()
+    print(title)
     for v in s:
-        print " ", v
+        print((" ", v))
 
 def main():
     base = os.path.dirname(sys.argv[0])

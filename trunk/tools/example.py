@@ -5,7 +5,7 @@ import pluginloader
 fs = 44100
 dsp = pluginloader.Plugin("./example_plugin.so")
 dsp.init(fs)
-print "default level:", dsp["dsp.level"]
+print(("default level:", dsp["dsp.level"]))
 dsp["dsp.level"] = 0.5
 impulse = zeros(5, dtype=float32)
 impulse[0] = 1.0
@@ -27,4 +27,4 @@ tm = zeros(n)
 for i in range(n):
     dsp.compute(inp)
     tm[i] = dsp.nanosec_per_sample
-print "%.2f +/- %.3f" % (mean(tm), std(tm))
+print(("%.2f +/- %.3f" % (mean(tm), std(tm))))

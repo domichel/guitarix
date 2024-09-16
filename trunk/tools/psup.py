@@ -40,7 +40,7 @@ running:
 
 >>> reload(psup); from psup import *
 """
-from itertools import chain, izip
+from itertools import chain
 from pprint import pprint
 import gtk
 from gtk import (STATE_NORMAL, STATE_ACTIVE, STATE_PRELIGHT,
@@ -75,7 +75,7 @@ def print_table(rows, enum=False, reverse=False):
     if reverse:
         lines.reverse()
     for row in lines:
-        print fmt % tuple(chain.from_iterable(izip(m, row)))
+        print((fmt % tuple(chain.from_iterable(list(zip(m, row))))))
 
 def ls_style(widget):
     """print all style properties of widget"""
@@ -148,31 +148,31 @@ def diffstyle(w1, w2):
             pdiff(f, v)
     print_table(l)
     if l:
-        print "pstyle(w,%s)" % ",".join(d)
+        print(("pstyle(w,%s)" % ",".join(d)))
 
 for _v in "fg", "bg", "light", "dark", "mid", "text", "base", "text_aa":
-    exec ("def xs_%(fld)s(state):\n"
+    exec(("def xs_%(fld)s(state):\n"
           "    'field accessor builder (color state), use with pstyle'\n"
           "    def %(fld)s(s):\n"
           "        return s.%(fld)s[state]\n"
           "    return %(fld)s\n"
-          ) % dict(fld=_v)
+          ) % dict(fld=_v))
 
 for _v in "black", "white", "xthickness", "ythickness":
-    exec ("def x_%(fld)s(s):\n"
+    exec(("def x_%(fld)s(s):\n"
           "    'field accessor, use with pstyle'\n"
           "    return s.%(fld)s\n"
-          ) % dict(fld=_v)
+          ) % dict(fld=_v))
 
 for _v in "family", "style", "variant", "weight", "stretch", "size", "size_is_absolute":
-    exec ("def x_%(fld)s(s):\n"
+    exec(("def x_%(fld)s(s):\n"
           "    'field accessor, use with pstyle'\n"
           "    v = s.font_desc.get_%(fld)s()\n"
           "    try:\n"
           "        return v.value_nick\n"
           "    except AttributeError:\n"
           "        return v\n"
-          ) % dict(fld=_v)
+          ) % dict(fld=_v))
     
 
 def x_font(s):

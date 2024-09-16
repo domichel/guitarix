@@ -3,7 +3,7 @@
 
 import re, os, sys
 try:
-    from cStringIO import StringIO
+    from io import StringIO
 except ImportError:
     from io import StringIO
 import subprocess
@@ -62,7 +62,7 @@ class UIDefs(object):
             d["N_name"] = wrap_N_("%(name)s" % self)
             d["N_tooltip"] = wrap_N_("%(tooltip)s" % self)
             ast = d["id"].split(".")
-            d["port"] = re.sub(r'\s+', '',ast[-1].upper())
+            d["port"] = re.sub(r'\s+', '', ast[-1].upper())
             if "log" in d:
                 d["type"] += "L"
             if "enum" not in d:
@@ -98,7 +98,7 @@ class UIDefs(object):
             d = {}
             d.update(self)
             ast = d["id"].split(".")
-            d["port"] = re.sub(r'\s+', '',ast[-1].upper())
+            d["port"] = re.sub(r'\s+', '', ast[-1].upper())
             if not d["port"] in ports:
                 fp.write('   %(port)s, \n' % d)
             ports.append(d["port"])
@@ -135,11 +135,11 @@ class UIDefs(object):
         return filt
 
     def write(self, fp, prefix=""):
-        for v, r in self.ui.items():
+        for v, r in list(self.ui.items()):
             r.write(fp, v, prefix)
 
     def write_port(self, fp, prefix=""):
-        self.items=sorted(self.ui.items(), key=lambda d: d[0][4])
+        self.items=sorted(list(self.ui.items()), key=lambda d: d[0][4])
         ports = []
         dp = []
         dp.append(0)
@@ -152,19 +152,19 @@ class UIDefs(object):
 
     def write_port_head(self, fp, prefix=""):
         ports = []
-        for v, r in self.ui.items():
+        for v, r in list(self.ui.items()):
             r.write_port_head(fp, v, prefix, ports)
         ports = []
 
     def check_parameter(self, fname, uiname, l, only_warn):
         s1 = set(l)
-        s2 = set([v["id"] for v in self.ui.values()])
+        s2 = {v["id"] for v in list(self.ui.values())}
         d = s2 - s1
         errlevel = 0
         if d:
             if not "highgain" in ", ".join(d): # avoid warning for missing amp.highain in ampmodule
-                print ("%s:warning: parameters in faust dsp not used in %s: %s"
-                       % (fname, uiname, ", ".join(d)))
+                print(("%s:warning: parameters in faust dsp not used in %s: %s"
+                       % (fname, uiname, ", ".join(d))))
                 errlevel = 1
         d = s1 - s2
         if d:
@@ -174,8 +174,8 @@ class UIDefs(object):
             else:
                 cat = "error"
                 errlevel = 2
-            print ("%s:%s: parameters in %s not found in faust dsp: %s"
-                   % (fname, cat, uiname, ", ".join(d)))
+            print(("%s:%s: parameters in %s not found in faust dsp: %s"
+                   % (fname, cat, uiname, ", ".join(d))))
         return errlevel
 
 
@@ -240,9 +240,9 @@ class Parser(object):
             if o(line):
                 break
             if line.startswith("		for"):
-                line = line.replace("{\n","")
+                line = line.replace("{\n", "")
                 l = next(self.lines)
-                line += l.replace("\t","")
+                line += l.replace("\t", "")
                 l = next(self.lines)
                 if not l.strip():
                     l = next(self.lines)
@@ -270,7 +270,7 @@ class Parser(object):
             l = []
             n = []
             while aString:
-                v = aString.split('[',1)
+                v = aString.split('[', 1)
                 if len(v) == 2:
                     s, match = v
                 else:
@@ -292,7 +292,7 @@ class Parser(object):
         s, l = findBrackets(s)
         for v in l:
             if ":" in v:
-                key, value = v.split(":",1)
+                key, value = v.split(":", 1)
             else:
                 key = v
                 value = ""
@@ -334,9 +334,9 @@ class Parser(object):
             stack.pop()
             if nm.startswith("."):
                 if self.toplevel == "low_highpass" :
-                    return nm[1:].replace("0x00","low_high_pass")
-                return nm[1:].replace("0x00",self.toplevel)
-            return nm.replace("0x00",self.toplevel)
+                    return nm[1:].replace("0x00", "low_high_pass")
+                return nm[1:].replace("0x00", self.toplevel)
+            return nm.replace("0x00", self.toplevel)
 
         nextbox = {}
         for line in self.lines:
@@ -345,7 +345,7 @@ class Parser(object):
                 while line.find("FAUSTFLOAT(") != -1:
                     line = line.replace("FAUSTFLOAT(", "", 1)
                     count += 1
-                line = line.replace(")","",count)
+                line = line.replace(")", "", count)
 
             if not line.strip():
                 continue
@@ -384,7 +384,7 @@ class Parser(object):
                 vn = m.group(2)
                 self.ui.add(vn, "type", "B")
                 self.ui.add(vn, "id", make_name(m.group(1)))
-                self.ui.add(vn, "value", ("0.0","0.0","1.0","1.0"))
+                self.ui.add(vn, "value", ("0.0", "0.0", "1.0", "1.0"))
                 continue
             m = vbargraph(line) or hbargraph(line)
             if m:
@@ -421,7 +421,7 @@ class Parser(object):
     def splitgroups(self, value):
         d = {}
         for l in re.split(r"\]\s*,\s*", value):
-            a = re.split(r"\s*\[\s*",l,1)
+            a = re.split(r"\s*\[\s*", l, 1)
             g = a[0].strip()
             if len(a) == 1:
                 v = "?"
@@ -475,15 +475,15 @@ class Parser(object):
         l = ""
         for line in self.lines:
             if stop(line):
-                return cl,l,cp
+                return cl, l, cp
             if line.startswith('const static '):
                 l = line
                 cl = True
-                return cl,l,cp
+                return cl, l, cp
             if line.startswith('class '):
                 l = line
                 cl = True
-                return cl,l,cp
+                return cl, l, cp
             if line.startswith('#include "'):
                 cp.append(line)
                 
@@ -525,15 +525,15 @@ class Parser(object):
         out_undefines = []
         for l in lines:
             if '% ' in l:
-                l = l.replace(u'%','%%')
+                l = l.replace('%', '%%')
             m = param_matcher(l);
             if m:
                 var = m.group(1)
-                alias = self.ui.has(var,"alias")
+                alias = self.ui.has(var, "alias")
                 if init_type in ("plugin-lv2"):
                     if not alias:
-                        self.ui.add(var,"alias", "[alias]")
-                        alias = self.ui.has(var,"alias")
+                        self.ui.add(var, "alias", "[alias]")
+                        alias = self.ui.has(var, "alias")
                 if alias:
                     #l = ('FAUSTFLOAT&\t%s = get_alias("%s");\n'
                     #     % (var, self.ui.get(var, "id")))
@@ -553,7 +553,7 @@ class Parser(object):
                     if alen * sz > self.options.memory_threshold:
                         l = "%s *%s;\n" % (m.group(1), m.group(2))
                         self.memlist.append((m.group(2), m.group(1), alen))
-            if l.startswith(("int","float","double","FAUSTFLOAT")):
+            if l.startswith(("int", "float", "double", "FAUSTFLOAT")):
                 l = "%(static)s" + l
             out.append(l)
         return out, out_defines, out_undefines
@@ -603,7 +603,7 @@ class Parser(object):
             self.headvers = headvers.group(1)
         else:
             self.headvers = headvers.group(2) + headvers.group(4).lstrip()
-        cl,self.l,s["includes"] = self.readIncludes(r"class mydsp : public dsp {")
+        cl, self.l, s["includes"] = self.readIncludes(r"class mydsp : public dsp {")
         if cl:
             s["incl_class"] = self.readClass(r"class mydsp : public dsp {")
         else:
@@ -625,7 +625,7 @@ class Parser(object):
         self.sample_rate_param = self.skip_until(r"\s*virtual void init\(int ([a-zA-Z_]+)\)").group(1)
         self.skip_until(r"\s*virtual void buildUserInterface")
         s["ui"] = self.readUI(r"\s*}$")
-        s["var-decl"], s["alias-defines"], s["alias-undefines"] = self.change_var_decl(var_decl,options.init_type)
+        s["var-decl"], s["alias-defines"], s["alias-undefines"] = self.change_var_decl(var_decl, options.init_type)
         s["var-init"] = s["var-init"]
         s["var-alloc"] = self.add_var_alloc()
         s["var-free"] = self.add_var_free()
@@ -682,14 +682,14 @@ class Parser(object):
             m = match(line)
             if m:
                 g = m.groups()
-                line = "%s* %sput%s_ptr = &%sputX%s[0];\n" % (g[0],g[1],g[2],g[1],g[2])
+                line = "%s* %sput%s_ptr = &%sputX%s[0];\n" % (g[0], g[1], g[2], g[1], g[2])
             if self.fixedrate or self.oversample:
-                line=re.sub("count",'ReCount',line)
-                line=re.sub("inputX0",'buf',line)
-                line=re.sub("outputX0",'buf',line)
+                line=re.sub("count", 'ReCount', line)
+                line=re.sub("inputX0", 'buf', line)
+                line=re.sub("outputX0", 'buf', line)
                 if self.numOutputs == 2:
-                    line=re.sub("inputX1",'bufs',line)
-                    line=re.sub("outputX1",'bufs',line)
+                    line=re.sub("inputX1", 'bufs', line)
+                    line=re.sub("outputX1", 'bufs', line)
             l.append(line)
         return l
 
@@ -700,12 +700,12 @@ class Parser(object):
         for line in lines:
             if not match(line):
                 if self.fixedrate or self.oversample:
-                    line=re.sub("count",'ReCount',line)
-                    line=re.sub("input0",'buf',line)
-                    line=re.sub("output0",'buf',line)
+                    line=re.sub("count", 'ReCount', line)
+                    line=re.sub("input0", 'buf', line)
+                    line=re.sub("output0", 'buf', line)
                     if self.numOutputs == 2:
-                        line=re.sub("input1",'bufs',line)
-                        line=re.sub("output1",'bufs',line)
+                        line=re.sub("input1", 'bufs', line)
+                        line=re.sub("output1", 'bufs', line)
                 l.append(line)
         return l
 
@@ -713,7 +713,7 @@ class Parser(object):
         l = []
         for line in lines:
             if not 'mydsp::ftbl' in line:
-                line=re.sub("mydsp",'Dsp',line)
+                line=re.sub("mydsp", 'Dsp', line)
                 z = 0
                 f = ''
                 for item in line:
@@ -740,7 +740,7 @@ class Parser(object):
                     in_loop = True
                 continue
             if re_m(l):
-                print("%s %s" % (self.modname, l))
+                print(("%s %s" % (self.modname, l)))
 
     def getNumInputs(self):
         return self.numInputs
@@ -753,7 +753,7 @@ class Parser(object):
 
     def formatted_groups(self, plugin_id):
         l = []
-        for k, v in self.groups.items():
+        for k, v in list(self.groups.items()):
             if k == plugin_id:
                 continue
             k = '"'+k+'"'
@@ -1965,11 +1965,11 @@ class Output(object):
         sg = ""
         if os.path.exists(ui_name):
             xml = open(ui_name).read()
-            found_params = re.findall('<property name="var_id">([^<]*)</property>',xml)
+            found_params = re.findall('<property name="var_id">([^<]*)</property>', xml)
             if not self.parser.has_drywetbox and not self.parser.has_volume_p:
                 if self.parser.ui.check_parameter(self.fname, ui_name, found_params, self.options.param_warn) > 1:
                     raise SystemExit(1)
-            sg = xml.replace("\\",r"\\").replace("\n","\\n\\\n").replace('"',r'\"')
+            sg = xml.replace("\\", r"\\").replace("\n", "\\n\\\n").replace('"', r'\"')
             load_ui |= 2
         ui_name = self.fname.replace(".dsp", "_ui.cc")
         ccdef = ""
@@ -2017,9 +2017,9 @@ class Output(object):
             plugin_id,    # id
             plugin_name,  # name
             "parm_groups" if self.parser.groups else "0",  # groups
-            wrap_N_(getattr(self.parser,"description","")), # description (tooltip)
-            wrap_N_(getattr(self.parser,"category","")),    # category
-            wrap_N_(getattr(self.parser,"shortname","")),   # shortname
+            wrap_N_(getattr(self.parser, "description", "")), # description (tooltip)
+            wrap_N_(getattr(self.parser, "category", "")),    # category
+            wrap_N_(getattr(self.parser, "shortname", "")),   # shortname
             "compute" if self.parser.getNumOutputs() == 1 else "0",  # mono_audio
             "compute" if self.parser.getNumOutputs() == 2 else "0",  # stereo_audio
             "activate" if self.has_activate else "0",  # activate plugin
@@ -2166,7 +2166,7 @@ class Output(object):
             has_standalone_header = plugin_standalone,
             includes = self.parser_sect("includes"),
             incl_class = self.parser_sect("incl_class"),
-            namespace = self.parser.modname.replace("-","_"),
+            namespace = self.parser.modname.replace("-", "_"),
             var_decl = self.parser_sect("var-decl", indent=indent) % dd,
             static_decl = static_decl,
             has_activate = self.has_activate,
@@ -2212,9 +2212,9 @@ class Output(object):
             plugin_id = plugin_id,
             plugin_name = plugin_name,
             groups_p = "parm_groups" if groups_define else "0",
-            description = wrap_N_(getattr(self.parser,"description","")),
-            category = wrap_N_(getattr(self.parser,"category","")),
-            shortname = wrap_N_(getattr(self.parser,"shortname","")),
+            description = wrap_N_(getattr(self.parser, "description", "")),
+            category = wrap_N_(getattr(self.parser, "category", "")),
+            shortname = wrap_N_(getattr(self.parser, "shortname", "")),
             mono_compute_p = "compute"+ds if self.parser.getNumOutputs() == 1 else "0",
             stereo_compute_p = "compute"+ds if self.parser.getNumOutputs() == 2 else "0",
             activate_p = "activate"+ds if self.has_activate else "0",
@@ -2337,7 +2337,7 @@ def main():
         op.error("exactly one input filename expected\n")
     fname = args[0]
     if not os.path.exists(fname):
-        print("error: can't open '%s'" % fname)
+        print(("error: can't open '%s'" % fname))
         raise SystemExit(1)
     faust_opt = []
     if options.faust:

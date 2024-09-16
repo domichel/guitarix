@@ -405,7 +405,7 @@ class Plugin(Structure):
 
     def get_num_ports_of_class(self, *args):
         """Get the number of ports on this plugin that are members of some class(es)."""
-        args = list(map(lambda x: x.node, args))
+        args = list([x.node for x in args])
         args += (None,)
         return plugin_get_num_ports_of_class(self.plugin, *args)
 
@@ -430,7 +430,7 @@ class Plugin(Structure):
 
     def get_port(self, key):
         """Get a port on `plugin` by index or symbol."""
-        if type(key) == int:
+        if isinstance(key, int):
             return self.get_port_by_index(key)
         else:
             return self.get_port_by_symbol(key)
@@ -445,7 +445,7 @@ class Plugin(Structure):
         Note this function is slower than get_port_by_index(),
         especially on plugins with a very large number of ports.
         """
-        if type(symbol) == str:
+        if isinstance(symbol, str):
             symbol = self.world.new_string(symbol)
         return Port.wrap(self, plugin_get_port_by_symbol(self.plugin, symbol.node))
 
@@ -810,7 +810,7 @@ class Iter(Structure):
         """Get the current item."""
         return self.constructor(self.iter_get(self.collection, self.iterator))
 
-    def next(self):
+    def __next__(self):
         """Move to and return the next item."""
         if self.is_end():
             raise StopIteration
@@ -869,7 +869,7 @@ class Plugins(Collection):
         return plugins_size(self.collection)
 
     def __getitem__(self, key):
-        if type(key) == int:
+        if isinstance(key, int):
             return super(Plugins, self).__getitem__(key)
         return self.get_by_uri(key)
 
@@ -891,7 +891,7 @@ class PluginClasses(Collection):
         return plugin_classes_size(self.collection)
 
     def __getitem__(self, key):
-        if type(key) == int:
+        if isinstance(key, int):
             return super(PluginClasses, self).__getitem__(key)
         return self.get_by_uri(key)
 
@@ -922,7 +922,7 @@ class UIs(Collection):
         return uis_size(self.collection)
 
     def __getitem__(self, key):
-        if type(key) == int:
+        if isinstance(key, int):
             return super(UIs, self).__getitem__(key)
         return self.get_by_uri(key)
 
@@ -1209,7 +1209,7 @@ class Instance(Structure):
                 self.get_handle(),
                 port_index,
                 data)
-        elif type(data) == numpy.ndarray:
+        elif isinstance(data, numpy.ndarray):
             self.get_descriptor().connect_port(
                 self.get_handle(),
                 port_index,

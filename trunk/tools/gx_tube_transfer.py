@@ -19,7 +19,7 @@
 #
 
 
-import sys, os, gtk, StringIO, glib, multiprocessing
+import sys, os, gtk, io, glib, multiprocessing
 from pylab import *
 from time import sleep
 from tube_transfer import *
@@ -53,7 +53,7 @@ class tube_transfer(gtk.Window):
         self.scale4.set_value(c.Uin_max)
         
     
-    def on_tube_changed(self,widget):
+    def on_tube_changed(self, widget):
         c = Circuit(self.tube.get_active_text(), self.func.get_active_text())
         self.get_param(c)
         tubevalues = ""
@@ -71,7 +71,7 @@ class tube_transfer(gtk.Window):
         else:
             self.func.set_active(1)
     
-    def on_type_changed(self,widget):
+    def on_type_changed(self, widget):
         c = Circuit(self.tube.get_active_text(), self.func.get_active_text())
         self.get_param(c)
         tubevalues = ""
@@ -99,13 +99,13 @@ class tube_transfer(gtk.Window):
         c.Rp           = self.scale2.get_value()*1e3
         c.Uin_min      = self.scale3.get_value()
         c.Uin_max       = self.scale4.get_value()
-        c.Vi = linspace(self.scale3.get_value(),self.scale4.get_value(),self.table_size)
+        c.Vi = linspace(self.scale3.get_value(), self.scale4.get_value(), self.table_size)
     
     def on_accuracy(self, widget):
         c = Circuit(self.tube.get_active_text(), self.func.get_active_text())
         self.set_param(c)
         old_stdout = sys.stdout
-        capturer = StringIO.StringIO()
+        capturer = io.StringIO()
         sys.stdout = capturer
         c.display_accuracy()
         sys.stdout = old_stdout
@@ -168,37 +168,37 @@ class tube_transfer(gtk.Window):
         c = Circuit(self.tube.get_active_text(), self.func.get_active_text())
         self.set_param(c)
         old_stdout = sys.stdout
-        capturer = StringIO.StringIO()
+        capturer = io.StringIO()
         sys.stdout = capturer
         args = [0, self.scale5.get_value()*1e3]
         c.show_vk0(args)
         sys.stdout = old_stdout
-        output = capturer.getvalue().replace('\n','')
+        output = capturer.getvalue().replace('\n', '')
         c = Circuit(self.tube.get_active_text(), self.func.get_active_text())
         self.set_param(c)
         old_stdout = sys.stdout
-        capturer = StringIO.StringIO()
+        capturer = io.StringIO()
         sys.stdout = capturer
         args = [1, 1.5*1e3]
         c.show_vk0(args)
         sys.stdout = old_stdout
-        output1 = capturer.getvalue().replace('\n','')
+        output1 = capturer.getvalue().replace('\n', '')
         c = Circuit(self.tube.get_active_text(), self.func.get_active_text())
         self.set_param(c)
         old_stdout = sys.stdout
-        capturer = StringIO.StringIO()
+        capturer = io.StringIO()
         sys.stdout = capturer
         args = [1, 0.8*1e3]
         c.show_vk0(args)
         sys.stdout = old_stdout
-        output2 = capturer.getvalue().replace('\n','')
+        output2 = capturer.getvalue().replace('\n', '')
         self.labelvk01.set_text("Ri(%s) Rk(%s) vk0(%s)  \nRi(%s) Rk(1.5) vk0(%s)   Ri(%s) Rk(0.8) vk0(%s)" % 
-            (self.scale6.get_value(),self.scale5.get_value() ,output, self.scale7.get_value(), output1, self.scale7.get_value(), output2) )
+            (self.scale6.get_value(), self.scale5.get_value(), output, self.scale7.get_value(), output1, self.scale7.get_value(), output2) )
     
     def on_table_progress(self):
         script_dir = sys.path[0]
         save_path = os.path.join(script_dir, 'gxtubes')
-        myfile='%s/%s.cc' % (save_path,self.tube.get_active_text())
+        myfile='%s/%s.cc' % (save_path, self.tube.get_active_text())
         self.progressbar.show()
         if self.progressbar.get_fraction() >= 1.0:
             value = 0.0
@@ -230,7 +230,7 @@ class tube_transfer(gtk.Window):
     def on_table_do(self):
         script_dir = sys.path[0]
         save_path = os.path.join(script_dir, 'gxtubes')
-        myfile='%s/%s.cc' % (save_path,self.tube.get_active_text())
+        myfile='%s/%s.cc' % (save_path, self.tube.get_active_text())
         if not os.path.exists(save_path):
             os.makedirs(save_path)
         if os.path.isfile(myfile):
@@ -238,7 +238,7 @@ class tube_transfer(gtk.Window):
         c = Circuit(self.tube.get_active_text(), self.func.get_active_text())
         self.set_param(c)
         old_stdout = sys.stdout
-        capturer = StringIO.StringIO()
+        capturer = io.StringIO()
         sys.stdout = capturer
         c.write_tables(self.arg)
         sys.stdout = old_stdout
@@ -270,7 +270,7 @@ class tube_transfer(gtk.Window):
         self.sw.set_shadow_type(gtk.SHADOW_ETCHED_IN)
         self.sw.set_policy(gtk.POLICY_AUTOMATIC, gtk.POLICY_AUTOMATIC)
         self.progressbar = gtk.ProgressBar()
-        table = gtk.Table(2,9,False)
+        table = gtk.Table(2, 9, False)
         table.set_col_spacings(5)
         label = gtk.Label("Tube")
         self.tube = gtk.combo_box_new_text()
@@ -358,25 +358,25 @@ class tube_transfer(gtk.Window):
         self.tube.connect("changed", self.on_tube_changed)
         self.tube.set_active(2)
         
-        table.attach_defaults(label,0,1,0,1)
-        table.attach_defaults(label1,1,2,0,1)
-        table.attach_defaults(label2,2,3,0,1)
-        table.attach_defaults(label3,3,4,0,1)
-        table.attach_defaults(label4,4,5,0,1)
-        table.attach_defaults(label5,5,6,0,1)
-        table.attach_defaults(label6,6,7,0,1)
-        table.attach_defaults(label7,7,8,0,1)
-        table.attach_defaults(label8,8,9,0,1)
+        table.attach_defaults(label, 0, 1, 0, 1)
+        table.attach_defaults(label1, 1, 2, 0, 1)
+        table.attach_defaults(label2, 2, 3, 0, 1)
+        table.attach_defaults(label3, 3, 4, 0, 1)
+        table.attach_defaults(label4, 4, 5, 0, 1)
+        table.attach_defaults(label5, 5, 6, 0, 1)
+        table.attach_defaults(label6, 6, 7, 0, 1)
+        table.attach_defaults(label7, 7, 8, 0, 1)
+        table.attach_defaults(label8, 8, 9, 0, 1)
         
-        table.attach_defaults(self.tube,0,1,1,2)
-        table.attach_defaults(self.func,1,2,1,2)
-        table.attach_defaults(self.scale5,2,3,1,2)
-        table.attach_defaults(self.scale1,3,4,1,2)
-        table.attach_defaults(self.scale2,4,5,1,2)
-        table.attach_defaults(self.scale3,5,6,1,2)
-        table.attach_defaults(self.scale4,6,7,1,2)
-        table.attach_defaults(self.scale6,7,8,1,2)
-        table.attach_defaults(self.scale7,8,9,1,2)
+        table.attach_defaults(self.tube, 0, 1, 1, 2)
+        table.attach_defaults(self.func, 1, 2, 1, 2)
+        table.attach_defaults(self.scale5, 2, 3, 1, 2)
+        table.attach_defaults(self.scale1, 3, 4, 1, 2)
+        table.attach_defaults(self.scale2, 4, 5, 1, 2)
+        table.attach_defaults(self.scale3, 5, 6, 1, 2)
+        table.attach_defaults(self.scale4, 6, 7, 1, 2)
+        table.attach_defaults(self.scale6, 7, 8, 1, 2)
+        table.attach_defaults(self.scale7, 8, 9, 1, 2)
         
         vbox.pack_start(table, False, False, 0)
         vbox.pack_start(hbox1, False, False, 0)

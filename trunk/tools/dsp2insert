@@ -1,9 +1,9 @@
-#! /usr/bin/python
+#! /usr/bin/python3
 # -*- coding: utf-8 -*-
 
 import re, os, sys
 try:
-    from cStringIO import StringIO
+    from io import StringIO
 except ImportError:
     from io import StringIO
 from subprocess import Popen, PIPE
@@ -60,7 +60,7 @@ class UIDefs(object):
             d["N_name"] = wrap_N_("%(name)s" % self)
             d["N_tooltip"] = wrap_N_("%(tooltip)s" % self)
             ast = d["id"].split(".")
-            d["port"] = re.sub(r'\s+', '',ast[-1].upper())
+            d["port"] = re.sub(r'\s+', '', ast[-1].upper())
             if "log" in d:
                 d["type"] += "L"
             if "enum" not in d:
@@ -85,7 +85,7 @@ class UIDefs(object):
             d = {}
             d.update(self)
             ast = d["id"].split(".")
-            d["port"] = re.sub(r'\s+', '',ast[-1].upper())
+            d["port"] = re.sub(r'\s+', '', ast[-1].upper())
             fp.write('   %(port)s, \n' % d)
 
         def __getitem__(self, n):
@@ -120,25 +120,25 @@ class UIDefs(object):
         return filt
 
     def write(self, fp, prefix=""):
-        for v, r in self.ui.items():
+        for v, r in list(self.ui.items()):
             r.write(fp, v, prefix)
 
     def write_port(self, fp, prefix=""):
-        for v, r in self.ui.items():
+        for v, r in list(self.ui.items()):
             r.write_port(fp, v, prefix)
 
     def write_port_head(self, fp, prefix=""):
-        for v, r in self.ui.items():
+        for v, r in list(self.ui.items()):
             r.write_port_head(fp, v, prefix)
 
     def check_parameter(self, fname, uiname, l, only_warn):
         s1 = set(l)
-        s2 = set([v["id"] for v in self.ui.values()])
+        s2 = {v["id"] for v in list(self.ui.values())}
         d = s2 - s1
         errlevel = 0
         if d:
-            print ("%s:warning: parameters in faust dsp not used in %s: %s"
-                   % (fname, uiname, ", ".join(d)))
+            print(("%s:warning: parameters in faust dsp not used in %s: %s"
+                   % (fname, uiname, ", ".join(d))))
             errlevel = 1
         d = s1 - s2
         if d:
@@ -148,8 +148,8 @@ class UIDefs(object):
             else:
                 cat = "error"
                 errlevel = 2
-            print ("%s:%s: parameters in %s not found in faust dsp: %s"
-                   % (fname, cat, uiname, ", ".join(d)))
+            print(("%s:%s: parameters in %s not found in faust dsp: %s"
+                   % (fname, cat, uiname, ", ".join(d))))
         return errlevel
 
 
@@ -214,9 +214,9 @@ class Parser(object):
             if o(line):
                 break
             if line.startswith("		for"):
-                line = line.replace("{\n","")
+                line = line.replace("{\n", "")
                 l = next(self.lines)
-                line += l.replace("\t","")
+                line += l.replace("\t", "")
                 l = next(self.lines)
                 if not l.strip():
                     l = next(self.lines)
@@ -243,7 +243,7 @@ class Parser(object):
             l = []
             n = []
             while aString:
-                v = aString.split('[',1)
+                v = aString.split('[', 1)
                 if len(v) == 2:
                     s, match = v
                 else:
@@ -265,7 +265,7 @@ class Parser(object):
         s, l = findBrackets(s)
         for v in l:
             if ":" in v:
-                key, value = v.split(":",1)
+                key, value = v.split(":", 1)
             else:
                 key = v
                 value = ""
@@ -306,8 +306,8 @@ class Parser(object):
             nm = make_name_int(stack)
             stack.pop()
             if nm.startswith("."):
-                return nm[1:].replace("0x00",self.toplevel)
-            return nm.replace("0x00",self.toplevel)
+                return nm[1:].replace("0x00", self.toplevel)
+            return nm.replace("0x00", self.toplevel)
 
         nextbox = {}
         for line in self.lines:
@@ -316,7 +316,7 @@ class Parser(object):
                 while line.find("FAUSTFLOAT(") != -1:
                     line = line.replace("FAUSTFLOAT(", "", 1)
                     count += 1
-                line = line.replace(")","",count)
+                line = line.replace(")", "", count)
 
             if not line.strip():
                 continue
@@ -355,7 +355,7 @@ class Parser(object):
                 vn = m.group(2)
                 self.ui.add(vn, "type", "B")
                 self.ui.add(vn, "id", make_name(m.group(1)))
-                self.ui.add(vn, "value", ("0.0","0.0","1.0","1.0"))
+                self.ui.add(vn, "value", ("0.0", "0.0", "1.0", "1.0"))
                 continue
             m = vbargraph(line) or hbargraph(line)
             if m:
@@ -394,7 +394,7 @@ class Parser(object):
     def splitgroups(self, value):
         d = {}
         for l in re.split(r"\]\s*,\s*", value):
-            a = re.split(r"\s*\[\s*",l,1)
+            a = re.split(r"\s*\[\s*", l, 1)
             g = a[0].strip()
             if len(a) == 1:
                 v = "?"
@@ -453,19 +453,19 @@ class Parser(object):
         out_defines = []
         out_undefines = []
         for l in lines:
-            l=re.sub("Const",'ConstCl',l)
-            l=re.sub("Vec",'VecCl',l)
-            l=re.sub("Rec",'RecCl',l)
-            l=re.sub("Yec",'YecCl',l)
-            l=re.sub("index",'indexCl',l)
+            l=re.sub("Const", 'ConstCl', l)
+            l=re.sub("Vec", 'VecCl', l)
+            l=re.sub("Rec", 'RecCl', l)
+            l=re.sub("Yec", 'YecCl', l)
+            l=re.sub("index", 'indexCl', l)
             m = param_matcher(l);
             if m:
                 var = m.group(1)
-                alias = self.ui.has(var,"alias")
+                alias = self.ui.has(var, "alias")
                 if init_type in ("plugin-lv2"):
                     if not alias:
-                        self.ui.add(var,"alias", "[alias]")
-                        alias = self.ui.has(var,"alias")
+                        self.ui.add(var, "alias", "[alias]")
+                        alias = self.ui.has(var, "alias")
                 if alias:
                     #l = ('FAUSTFLOAT&\t%s = get_alias("%s");\n'
                     #     % (var, self.ui.get(var, "id")))
@@ -485,7 +485,7 @@ class Parser(object):
                     if alen * sz > self.options.memory_threshold:
                         l = "%s *%s;\n" % (m.group(1), m.group(2))
                         self.memlist.append((m.group(2), m.group(1), alen))
-            if l.startswith(("int","float","double","FAUSTFLOAT")):
+            if l.startswith(("int", "float", "double", "FAUSTFLOAT")):
                 l = "%(static)s" + l
             out.append(l)
         return out, out_defines, out_undefines
@@ -539,7 +539,7 @@ class Parser(object):
         self.sample_rate_param = self.skip_until(r"\s*virtual void init\(int ([a-zA-Z_]+)\)").group(1)
         self.skip_until(r"\s*virtual void buildUserInterface")
         s["ui"] = self.readUI(r"\s*}$")
-        s["var-decl"], s["alias-defines"], s["alias-undefines"] = self.change_var_decl(var_decl,options.init_type)
+        s["var-decl"], s["alias-defines"], s["alias-undefines"] = self.change_var_decl(var_decl, options.init_type)
         s["var-init"] = self.replace_var_name(s["var-init"])
         s["var-alloc"] = self.add_var_alloc()
         s["var-free"] = self.add_var_free()
@@ -562,10 +562,10 @@ class Parser(object):
     def replace_var_name(self, lines):
         l = []
         for line in lines:
-            line=re.sub("Const",'ConstCl',line)
-            line=re.sub("Vec",'VecCl',line)
-            line=re.sub("Rec",'RecCl',line)
-            line=re.sub("Yec",'YecCl',line)
+            line=re.sub("Const", 'ConstCl', line)
+            line=re.sub("Vec", 'VecCl', line)
+            line=re.sub("Rec", 'RecCl', line)
+            line=re.sub("Yec", 'YecCl', line)
             l.append(line)
         return l
         
@@ -575,25 +575,25 @@ class Parser(object):
         match = re.compile(ioref).match
         l = []
         for line in lines:
-            line=re.sub("Const",'ConstCl',line)
-            line=re.sub("Vec",'VecCl',line)
-            line=re.sub("Rec",'RecCl',line)
-            line=re.sub("Yec",'YecCl',line)
-            line=re.sub("index",'indexCl',line)
-            line=re.sub("count",'ReCount',line)
+            line=re.sub("Const", 'ConstCl', line)
+            line=re.sub("Vec", 'VecCl', line)
+            line=re.sub("Rec", 'RecCl', line)
+            line=re.sub("Yec", 'YecCl', line)
+            line=re.sub("index", 'indexCl', line)
+            line=re.sub("count", 'ReCount', line)
             m = match(line)
             #if not match(line):
             if m:
                 g = m.groups()
-                line = "\t%s* %sput%s_ptr = &%sputX%s[0];\n" % (g[0],g[1],g[2],g[1],g[2])
+                line = "\t%s* %sput%s_ptr = &%sputX%s[0];\n" % (g[0], g[1], g[2], g[1], g[2])
             if self.oversample:
-                line=re.sub("inputX0",'bufCl',line)
-                line=re.sub("outputX0",'bufCl',line)
-                line=re.sub("input0_ptr",'input0_Clptr',line)
-                line=re.sub("output0_ptr",'output0_Clptr',line)
+                line=re.sub("inputX0", 'bufCl', line)
+                line=re.sub("outputX0", 'bufCl', line)
+                line=re.sub("input0_ptr", 'input0_Clptr', line)
+                line=re.sub("output0_ptr", 'output0_Clptr', line)
                 if self.numOutputs == 2:
-                    line=re.sub("inputX1",'bufsCl',line)
-                    line=re.sub("outputX1",'bufsCl',line)
+                    line=re.sub("inputX1", 'bufsCl', line)
+                    line=re.sub("outputX1", 'bufsCl', line)
             l.append(line)
         return l
 
@@ -602,20 +602,20 @@ class Parser(object):
         match = re.compile(ioref).match
         l = []
         for line in lines:
-            line=re.sub("Const",'ConstCl',line)
-            line=re.sub("Vec",'VecCl',line)
-            line=re.sub("Rec",'RecCl',line)
-            line=re.sub("Yec",'YecCl',line)
+            line=re.sub("Const", 'ConstCl', line)
+            line=re.sub("Vec", 'VecCl', line)
+            line=re.sub("Rec", 'RecCl', line)
+            line=re.sub("Yec", 'YecCl', line)
             if not match(line):
                 if self.oversample:
-                    line=re.sub("count",'ReCount',line)
-                    line=re.sub("input0",'bufCl',line)
-                    line=re.sub("output0",'bufCl',line)
+                    line=re.sub("count", 'ReCount', line)
+                    line=re.sub("input0", 'bufCl', line)
+                    line=re.sub("output0", 'bufCl', line)
                     if self.numOutputs == 2:
-                        line=re.sub("input1",'bufsCl',line)
-                        line=re.sub("output1",'bufsCl',line)
+                        line=re.sub("input1", 'bufsCl', line)
+                        line=re.sub("output1", 'bufsCl', line)
                 else:
-                    line=re.sub("input",'output',line)
+                    line=re.sub("input", 'output', line)
                 l.append(line)            
         return l
 
@@ -629,7 +629,7 @@ class Parser(object):
                     in_loop = True
                 continue
             if re_m(l):
-                print("%s %s" % (self.modname, l))
+                print(("%s %s" % (self.modname, l)))
 
     def getNumInputs(self):
         return self.numInputs
@@ -642,7 +642,7 @@ class Parser(object):
 
     def formatted_groups(self, plugin_id):
         l = []
-        for k, v in self.groups.items():
+        for k, v in list(self.groups.items()):
             if k == plugin_id:
                 continue
             k = '"'+k+'"'
@@ -895,7 +895,7 @@ def main():
         op.error("exactly one input filename expected\n")
     fname = args[0]
     if not os.path.exists(fname):
-        print("error: can't open '%s'" % fname)
+        print(("error: can't open '%s'" % fname))
         raise SystemExit(1)
     faust_opt = []
     if options.faust:

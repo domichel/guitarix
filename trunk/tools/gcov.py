@@ -8,12 +8,12 @@ def set_options(opt):
 	opt.add_option('--with-gcov', action='store_true', help='Use gcov for profiling', default=False)
 
 def setup(bld):
-	for name in('cc','cxx'):
+	for name in('cc', 'cxx'):
 		if name not in Task.TaskBase.classes:
 			continue
 		task = Task.TaskBase.classes[name]
-		line = task.run.code.replace('SRC','SRC[0].abspath(env)')
-		(fun,v) = Task.compile_fun(name,line,False)
+		line = task.run.code.replace('SRC', 'SRC[0].abspath(env)')
+		(fun, v) = Task.compile_fun(name, line, False)
 		fun.code = line
 		task.run = fun
 

@@ -19,8 +19,8 @@ dtor_matcher = re.compile(".*D\dEv$").match
 def output(src, funcs):
     funcs = [v for v in funcs if not dtor_matcher(v)]
     if funcs:
-        print src
-        print "\n".join(demangle(funcs))
+        print(src)
+        print("\n".join(demangle(funcs)))
         #print "\n".join(["%s\t%s" % v for v in zip(funcs, demangle(funcs))])
 
 def main():
@@ -30,16 +30,16 @@ def main():
     gx_main = path.join(tooldir, "../build/default/src/gx_head/gx_main")
     maingcda = gx_main + ".gcda"
     if not path.exists(maingcda):
-        print ("file %s doesn't exist\n"
+        print(("file %s doesn't exist\n"
                "did you configure with --with-gcov, build, _and_ run guitarix??"
-               % maingcda)
+               % maingcda))
         raise SystemExit(1)
     if not (os.path.exists(coverage) and os.stat(coverage).st_mtime > os.stat(maingcda).st_mtime):
         builddir = path.join(tooldir, "../build")
-        print >>sys.stderr, "updating data..."
+        print("updating data...", file=sys.stderr)
         if os.system("cd %s && lcov -b . -c -d default -o coverage.info >/dev/null"
                      % builddir) != 0:
-            print "failed"
+            print("failed")
             raise SystemExit(1)
     send = False
     funcs = []
@@ -49,7 +49,7 @@ def main():
             if l[3:].startswith(srcdir):
                 output(src, funcs)
                 if funcs:
-                    print
+                    print()
                 src = l[3+len(srcdir):-1]
                 funcs = []
                 send = True

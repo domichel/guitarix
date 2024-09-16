@@ -1,11 +1,11 @@
-#! /usr/bin/env python
+#! /usr/bin/env python3
 import os
 try:
     import json
 except ImportError:
-    raise SystemExit, "please install package python-simplejson"
+    raise SystemExit("please install package python-simplejson")
 
-non_preset = set((
+non_preset = {
     "jconv.expander",
     "crybaby.dialog",
     "compressor.dialog",
@@ -22,7 +22,7 @@ non_preset = set((
     "jconv.filedialog",
     "system.fConsta1t",
     "freeverb.dialog",
-    ))
+    }
 
 old_vars = [
     "amp.feedback",
@@ -219,7 +219,7 @@ def conv_varlist(l, preset):
 def convert_presets():
     fn = "guitarixprerc"
     if not os.path.exists(fn):
-        print "no presets file"
+        print("no presets file")
         return
     presets = head[:]
     names = []
@@ -230,11 +230,11 @@ def convert_presets():
         presets.append(nm)
         d = dict(engine=conv_varlist(a[1:], True))
         presets.append(add_jconv("jconv_%s.conf" % nm, d))
-    print "%d presets found: %s" % (len(names), ", ".join(names))
-    json.dump(presets, file("guitarixpre_rc","w"))
+    print(("%d presets found: %s" % (len(names), ", ".join(names))))
+    json.dump(presets, file("guitarixpre_rc", "w"))
 
 def load_corrupt_json_midi_file(f):
-    f.next()
+    next(f)
     for line in f:
         if line.strip() == "]":
             return
@@ -252,7 +252,7 @@ def midi(fn):
             yield l[i], l[i+1]
     outl = []
     for v1, v2 in ll():
-        if v2[0][0] in ("T","C"):
+        if v2[0][0] in ("T", "C"):
             ls = []
             for v in v2:
                 del v[0]
@@ -266,7 +266,7 @@ def midi(fn):
 def convert_state():
     fn = "guitarixrc"
     if not os.path.exists(fn):
-        print "no state file"
+        print("no state file")
         return
     state = head[:]
     l = file(fn).read().split()
@@ -277,21 +277,21 @@ def convert_state():
                   "settings", ds,
                   "midi_controller", midi("guitarix_midi_rc"),
                   ])
-    json.dump(state, file("guitarix_rc","w"))
+    json.dump(state, file("guitarix_rc", "w"))
 
 def main():
     gxpath = os.path.join(os.environ["HOME"], ".guitarix")
     if not os.path.exists(gxpath):
-        print "%s doesn't exist, nothing done" % gxpath
+        print(("%s doesn't exist, nothing done" % gxpath))
         raise SystemExit
     os.chdir(gxpath)
     convert_presets()
     convert_state()
-    print "done."
+    print("done.")
 
 def param_range(a, b):
     for i in range(a+1, b):
-        print old_vars[i];
+        print((old_vars[i]));
 
 if __name__ == '__main__':
     main()

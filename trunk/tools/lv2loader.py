@@ -54,7 +54,7 @@ class LV2_Plugin:
         must be called before calling compute"""
         self._instance = lilv.Instance(self._plugin, samplingRate)
         n = 0
-        for port in self._params.values():
+        for port in list(self._params.values()):
             self._instance.connect_port(port.idx, port.val)
         self.activate()
         self._samplerate = samplingRate
@@ -91,7 +91,7 @@ class LV2_Plugin:
 
     def keys(self):
         "List of parameters names (in correct order)"
-        return [s for i, s in sorted((p.idx, p.symbol) for p in self._params.values())]
+        return [s for i, s in sorted((p.idx, p.symbol) for p in list(self._params.values()))]
 
     def get_var_attr(self, key):
         """argument: parameter name
@@ -154,11 +154,11 @@ class LV2_Plugin:
         no = self.num_outputs
         if no == 1:
             if inp_data.ndim == 2:
-                o = numpy.empty((1,count),dtype=numpy.float32)
+                o = numpy.empty((1, count), dtype=numpy.float32)
             else:
-                o = numpy.empty(count,dtype=numpy.float32)
+                o = numpy.empty(count, dtype=numpy.float32)
         else:
-            o = numpy.empty((no,count),dtype=numpy.float32)
+            o = numpy.empty((no, count), dtype=numpy.float32)
         for i in range(no):
             x = o[i] if o.ndim == 2 else o
             self._instance.connect_port(self._output_idx[i], x)
