@@ -63,7 +63,7 @@ def _add_dc_cmd(cmd, output, source, step, fmin, fmax, prefix = "ngspice"):
 def _mk_spice_netlist(fname):
     try:
         p = subprocess.Popen(
-            ("gnetlist","-g","spice-sdb","-o","/dev/fd/1","-q",fname),
+            ("gnetlist", "-g", "spice-sdb", "-o", "/dev/fd/1", "-q", fname),
             stdout=subprocess.PIPE, stderr=subprocess.PIPE)
     except OSError as e:
         raise RuntimeError(
@@ -72,7 +72,7 @@ def _mk_spice_netlist(fname):
     if p.returncode:
         raise ValueError("error calling gnetlist: %s" % err)
     if err:
-        print err
+        print(err)
     l = []
     for line in out.split("\n"):
         line = line.rstrip()
@@ -92,7 +92,7 @@ def _write_input_file(iname, lines):
 def _stream(script, out_file, prefix = "ngspice"):
     try:
         p = subprocess.Popen(
-            ("ngspice","-n","-b","/dev/fd/0"), cwd=out_file, stdin=subprocess.PIPE, 
+            ("ngspice", "-n", "-b", "/dev/fd/0"), cwd=out_file, stdin=subprocess.PIPE, 
             stdout=subprocess.PIPE, stderr=subprocess.PIPE)
     except OSError as e:
         raise RuntimeError(
@@ -101,7 +101,7 @@ def _stream(script, out_file, prefix = "ngspice"):
     # bug in ngspice: returncode always 1
     def checkerr(buf):
         #Find "error" key word in output stream
-        print buf
+        print(buf)
         if "Error" in buf:
             l = [line for line in buf.split("\n") if line.startswith("Error")]
             raise RuntimeError("error in ngspice call:\n%s" % "\n".join(l))
@@ -201,7 +201,7 @@ def plot_dc_to_compare(data_to_fit, polyfunc, visualise=False):
 		x_new = np.linspace(vin[0], vin[-1], 50)
 		y_new = polyfunc(x_new)
 		plt.figure()
-		plt.plot(vin,vout,'o', x_new, y_new)
+		plt.plot(vin, vout, 'o', x_new, y_new)
 		plt.show()
 		
 # Functions, which are needed for data exporting
@@ -211,13 +211,13 @@ def save_filter_to_file(fileName, b, a, prefixStr, description=""):
 			l = list("\n")
 			l.append("//Description: %s" % (description))
 			i = 0
-			for b_val, a_val in itertools.izip_longest(b, a, fillvalue=0):
+			for b_val, a_val in itertools.zip_longest(b, a, fillvalue=0):
 				l.append("b%g_%s = %s; a%g_%s = %s;" % (i, prefixStr, b_val, i, prefixStr, a_val))
 				i += 1
 			f.write("\n".join(l))
 			f.close()
 	except IOError as e:
-		print "I/O error({0}): {1}".format(e.errno, e.strerror)
+		print(("I/O error({0}): {1}".format(e.errno, e.strerror)))
 
 def save_dc_curve_to_file(fileName, poly, prefixStr, description=""):
 	coefs = poly.c
@@ -236,7 +236,7 @@ def save_dc_curve_to_file(fileName, poly, prefixStr, description=""):
 			f.write("\n".join(l))
 			f.close()
 	except IOError as e:
-		print "I/O error({0}): {1}".format(e.errno, e.strerror)
+		print(("I/O error({0}): {1}".format(e.errno, e.strerror)))
 
 # Read components values from netlist
 def _getValByRefDes(lines, refDes):
@@ -252,7 +252,7 @@ def _getValByRefDes(lines, refDes):
 
 def _metricConvert(val):
 	num = re.findall(r'\d+', val)
-	num = float(''.join(map(str,num)))
+	num = float(''.join(map(str, num)))
 	letter = re.findall("[a-zA-Z]+", val)
 	return {
         'M': num*1e6,
@@ -314,7 +314,7 @@ R9=getValByRefDes(netlist, "R9")
 
 # Some bilinear transform usage: see oc_2.dsp and *_1.sch to understand, what is going on.
 b41_1, a41_1 = scipy.signal.bilinear ([1.0], [R1*C1, 1.0], FS)
-b41_2, a41_2 = scipy.signal.bilinear ([C2*R9,1.0], [C2*(R2+R9),1.0], FS)
+b41_2, a41_2 = scipy.signal.bilinear ([C2*R9, 1.0], [C2*(R2+R9), 1.0], FS)
 b42, a42 = scipy.signal.bilinear ([C2*(R2+R9), 1.0], [C1*C2*(R2+R9)*R1, C2*(R2+R9)+R1*(C1+C2), 1.0], FS)
 
 R6=getValByRefDes(netlist, "R6")
